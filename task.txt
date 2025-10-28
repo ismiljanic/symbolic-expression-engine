@@ -1,0 +1,5 @@
+x < 0, 0 < D < x^2, leZ
+x_l = x - 2(l - 1)l
+t_1 = x_l*x_l+1 - D
+Calculate: det(x_, -t_l, -1, x_l+1) = D
+Matrix size arbitrary + Numbers replacing symbols
