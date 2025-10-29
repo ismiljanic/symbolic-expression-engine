@@ -220,7 +220,7 @@ public class Main {
                 double factor = mat[j][i] / mat[i][i];
                 for (int k = i; k < n; k++) mat[j][k] -= factor * mat[i][k];
                 if (detailedOutput)
-                    tracer.log("Eliminating row " + j + " using factor " + factor + " * row " + i);
+                    tracer.log("Eliminating row " + j + " using factor (" + mat[j][i] + " / " + mat[i][i] + ") = " + factor + " * row " + i);
             }
 
             if (detailedOutput) {
@@ -255,7 +255,8 @@ public class Main {
         Symbol detSign = new Constant(1);
         Symbol det = new Constant(1);
 
-        if (detailedOutput) tracer.log("Starting symbolic LU-based determinant calculation for " + n + "x" + n + " matrix.");
+        if (detailedOutput)
+            tracer.log("Starting symbolic LU-based determinant calculation for " + n + "x" + n + " matrix.");
 
         for (int i = 0; i < n; i++) {
             // --- Find pivot: first non-zero element in column i ---
@@ -331,7 +332,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        final int SYMBOLIC_LIMIT = 3; // recursive symbolic determinant limit
+        final int SYMBOLIC_LIMIT = 2; // recursive symbolic determinant limit
         Scanner sc = new Scanner(System.in);
         SymbolicTracer tracer = new SymbolicTracer();
 
@@ -352,10 +353,19 @@ public class Main {
                     for (int j = 0; j < n; j++) {
                         System.out.print("Element [" + (i + 1) + "," + (j + 1) + "]: ");
                         String input = sc.nextLine().trim();
-                        if (input.matches("-?\\d+(\\.\\d+)?")) matrix[i][j] = new Constant(Double.parseDouble(input));
-                        else {
-                            varsUsed.add(input);
-                            matrix[i][j] = new Variable(input);
+                        if (input.matches("-?\\d+(\\.\\d+)?")) {
+                            matrix[i][j] = new Constant(Double.parseDouble(input));
+                        } else {
+                            boolean isNegative = input.startsWith("-");
+                            String baseVar = isNegative ? input.substring(1) : input;
+
+                            varsUsed.add(baseVar);
+
+                            if (isNegative) {
+                                matrix[i][j] = new Expression(new Constant(-1), '*', new Variable(baseVar));
+                            } else {
+                                matrix[i][j] = new Variable(baseVar);
+                            }
                         }
                     }
             } else {
@@ -382,10 +392,19 @@ public class Main {
                 for (int j = 0; j < n; j++) {
                     System.out.print("Element [" + (i + 1) + "," + (j + 1) + "]: ");
                     String input = sc.nextLine().trim();
-                    if (input.matches("-?\\d+(\\.\\d+)?")) matrix[i][j] = new Constant(Double.parseDouble(input));
-                    else {
-                        varsUsed.add(input);
-                        matrix[i][j] = new Variable(input);
+                    if (input.matches("-?\\d+(\\.\\d+)?")) {
+                        matrix[i][j] = new Constant(Double.parseDouble(input));
+                    } else {
+                        boolean isNegative = input.startsWith("-");
+                        String baseVar = isNegative ? input.substring(1) : input;
+
+                        varsUsed.add(baseVar);
+
+                        if (isNegative) {
+                            matrix[i][j] = new Expression(new Constant(-1), '*', new Variable(baseVar));
+                        } else {
+                            matrix[i][j] = new Variable(baseVar);
+                        }
                     }
                 }
         }
@@ -402,21 +421,56 @@ public class Main {
         if (n <= SYMBOLIC_LIMIT) {
             // Small matrix: recursive symbolic
             Symbol det = m.determinant(tracer, null);
-            System.out.println("\nSymbolic determinant:");
-            System.out.println(det.toExpr());
+            String expr = det.toExpr();
+            System.out.println("\nSymbolic LU determinant:");
+            System.out.println(expr);
 
             if (!varsUsed.isEmpty()) {
                 boolean calcNumericWithVars = askYesNo(sc, "Calculate numeric determinant with variables?");
 
                 if (calcNumericWithVars) {
                     Map<String, Double> vars = new HashMap<>();
-                    for (String v : varsUsed) {
-                        System.out.print("Value for " + v + ": ");
-                        vars.put(v, sc.nextDouble());
+
+                    List<String> xLVars = varsUsed.stream()
+                            .filter(v -> v.matches("x_l([+-]\\d+)?"))
+                            .toList();
+
+                    double xValue = 0, lValue = 0;
+                    if (!xLVars.isEmpty()) {
+                        System.out.print("Enter value for x: ");
+                        xValue = sc.nextDouble();
+                        System.out.print("Enter value for l: ");
+                        lValue = sc.nextDouble();
                     }
+
+                    for (String v : xLVars) {
+                        int offset = 0;
+                        if (v.contains("+")) offset = Integer.parseInt(v.split("\\+")[1]);
+                        else if (v.contains("-")) offset = -Integer.parseInt(v.split("-")[1]);
+
+                        double lActual = lValue + offset;
+                        double x_l_value = xValue - 2 * (lActual - 1) * lActual;
+                        vars.put(v, x_l_value);
+                    }
+
+                    for (String v : varsUsed) {
+                        if (vars.containsKey(v)) continue;
+
+                        boolean isNegative = v.startsWith("-");
+                        String baseVar = isNegative ? v.substring(1) : v;
+
+                        System.out.print("Value for " + baseVar + ": ");
+                        double value = sc.nextDouble();
+
+                        if (isNegative) value = -value;
+
+                        vars.put(v, value);
+                    }
+
                     double numericDet = det.eval(vars);
                     System.out.println("Numeric determinant: " + numericDet);
-                } else {
+                }
+                else {
                     System.out.println("Skipped numeric evaluation.");
                 }
             } else {
@@ -444,18 +498,64 @@ public class Main {
             // Large matrix: symbolic LU
             boolean detailed = askYesNo(sc, "Detailed step-by-step symbolic LU?");
             Symbol det = symbolicLUDeterminant(m, tracer, detailed);
+            String expr = det.toExpr();
             System.out.println("\nSymbolic LU determinant:");
-            System.out.println(det.toExpr());
+            System.out.println(expr);
 
             if (!varsUsed.isEmpty()) {
                 Map<String, Double> vars = new HashMap<>();
-                System.out.println("Enter numeric values for variables to evaluate determinant:");
-                for (String v : varsUsed) {
-                    System.out.print("Value for " + v + ": ");
-                    vars.put(v, sc.nextDouble());
+
+                List<String> xLVars = varsUsed.stream()
+                        .filter(v -> v.matches("x_l([+-]\\d+)?"))
+                        .toList();
+
+                double xValue = 0, lValue = 0;
+                if (!xLVars.isEmpty()) {
+                    System.out.print("Enter value for x: ");
+                    xValue = sc.nextDouble();
+                    System.out.print("Enter value for l: ");
+                    lValue = sc.nextDouble();
                 }
-                double numericDet = det.eval(vars);
-                System.out.println("Numeric determinant: " + numericDet);
+
+                for (String v : xLVars) {
+                    int offset = 0;
+                    if (v.contains("+")) offset = Integer.parseInt(v.split("\\+")[1]);
+                    else if (v.contains("-")) offset = -Integer.parseInt(v.split("-")[1]);
+
+                    double lActual = lValue + offset;
+                    double x_l_value = xValue - 2 * (lActual - 1) * lActual;
+                    vars.put(v, x_l_value);
+                }
+
+                for (String v : varsUsed) {
+                    if (vars.containsKey(v)) continue;
+
+                    boolean isNegative = v.startsWith("-");
+                    String baseVar = isNegative ? v.substring(1) : v;
+
+                    System.out.print("Value for " + baseVar + ": ");
+                    double value = sc.nextDouble();
+
+                    if (isNegative) value = -value;
+
+                    vars.put(v, value);
+                }
+
+                double numericFromSymbolic = det.eval(vars);
+                System.out.printf("Numeric determinant (symbolic substitution): %.6f%n", numericFromSymbolic);
+
+                double[][] numericData = new double[m.n][m.n];
+                for (int i = 0; i < m.n; i++) {
+                    for (int j = 0; j < m.n; j++) {
+                        numericData[i][j] = m.data[i][j].eval(vars);
+                    }
+                }
+
+                boolean detailedNumeric = askYesNo(sc, "Run numeric LU with these values for correct pivoting?");
+                double numericDetLU = tracedNumericDeterminant(numericData, tracer, detailedNumeric);
+
+                System.out.printf("Numeric determinant (LU-based): %.6f%n", numericDetLU);
+
             } else {
                 double numericDet = det.eval(new HashMap<>());
                 System.out.println("Numeric determinant: " + numericDet);
