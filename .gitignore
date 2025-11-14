@@ -17,4 +17,6 @@ buildNumber.properties
 .classpath
 .DS_Store
 .idea
-.out
+out
+det55
+write.txt
