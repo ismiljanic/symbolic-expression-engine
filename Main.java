@@ -278,13 +278,30 @@ public class Main {
         }
 
         void printMatrix() {
-            System.out.println("Matrix " + name + ":");
+            int colWidth = 30;
+
+            System.out.print("      ");
+            for (int j = 0; j < n; j++) {
+                System.out.printf("%-" + colWidth + "s", "Col " + j);
+            }
+            System.out.println();
+
+            System.out.print("      ");
+            for (int j = 0; j < n; j++) System.out.print("-".repeat(colWidth));
+            System.out.println();
+
             for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) System.out.print(data[i][j].toExpr() + "\t");
+                System.out.printf("Row %-3d", i);
+                for (int j = 0; j < n; j++) {
+                    String expr = data[i][j].toExpr();
+                    if (expr.length() > colWidth - 1) expr = expr.substring(0, colWidth - 4) + "...";
+                    System.out.printf("%-" + colWidth + "s", expr);
+                }
                 System.out.println();
             }
             System.out.println();
         }
+
 
         Matrix minor(int row, int col) {
             Symbol[][] m = new Symbol[n - 1][n - 1];
@@ -539,6 +556,7 @@ public class Main {
                     v, x_l_val, x_l_plus1_val, inputs.dValue, t_val);
         }
     }
+
     private static void populateXLVar(Map<String, Double> vars, String v, NumericInputs inputs) {
         int offset = getOffset(v);
         double lShifted = inputs.lValue + offset;
@@ -763,6 +781,13 @@ public class Main {
         return expr;
     }
 
+    private static boolean isNumeric(Symbol s) {
+        if (s instanceof Constant) return true;
+        if (s instanceof Variable) return false;
+        if (s instanceof Expression e) return isNumeric(e.left) && isNumeric(e.right);
+        return false;
+    }
+
 
     static Map<String, Double> persistentVars = new HashMap<>();
     static Matrix currentReduced = null;
@@ -775,14 +800,18 @@ public class Main {
     ) {
         m.printMatrix();
 
-        // Check if matrix contains variables
         boolean allNumeric = true;
-        for (int i = 0; i < m.n && allNumeric; i++)
-            for (int j = 0; j < m.n && allNumeric; j++)
-                if (m.data[i][j] instanceof Variable) allNumeric = false;
+        for (int i = 0; i < m.n && allNumeric; i++) {
+            for (int j = 0; j < m.n && allNumeric; j++) {
+                Symbol s = m.data[i][j];
+                if (!isNumeric(s)) {
+                    System.out.println("Contains variable/expression: " + s.toExpr());
+                    allNumeric = false;
+                }
+            }
+        }
 
         if (!allNumeric) {
-            // Symbolic mode
             Symbol det = m.determinant(tracer, null);
             String expr = det.toExpr();
             System.out.println("\nSymbolic LU determinant:");
@@ -796,27 +825,23 @@ public class Main {
 
             if (!askYesNo(sc, "Calculate numeric determinant with variables?")) return;
 
-            // --- Persistent variable handling ---
             Map<String, Double> vars = new HashMap<>(persistentVars);
             vars.clear();
-            // Identify x_l* and t_l* variables
+
             List<String> xLVars = varsUsed.stream().filter(v -> v.matches("x_l([+-]\\d+)?")).toList();
             List<String> tLVars = varsUsed.stream().filter(v -> v.matches("t_l([+-]\\d+)?")).toList();
 
             boolean needXL = !xLVars.isEmpty() || !tLVars.isEmpty();
             boolean needD = varsUsed.contains("d") || !tLVars.isEmpty();
 
-            // Ask only for x, l, d
             NumericInputs inputs = collectBaseInputs(sc, needXL, needD);
             vars.put("x", inputs.xValue);
             vars.put("l", inputs.lValue);
             vars.put("d", inputs.dValue);
 
-            // Compute missing x_l* and t_l* only if not already in persistentVars
             for (String v : xLVars) if (!vars.containsKey(v)) populateXLVar(vars, v, inputs);
             for (String v : tLVars) if (!vars.containsKey(v)) populateTLVar(vars, v, inputs);
 
-            // Add any new user-defined variables
             for (String v : varsUsed)
                 if (!vars.containsKey(v)) {
                     System.out.print("Value for " + v + ": ");
@@ -824,30 +849,28 @@ public class Main {
                     vars.put(v, val);
                 }
 
-            persistentVars.putAll(vars); // save for next reductions
+            persistentVars.putAll(vars);
 
-            // Evaluate numeric determinant
             BigDecimal numericFromSymbolic = det.evalBD(vars);
             System.out.printf("Numeric determinant (symbolic substitution): %.6f%n", numericFromSymbolic);
 
-            // LU-based numeric
             BigDecimal[][] numericData = substituteNumericMatrix(m, vars);
             boolean detailedNumeric = askYesNo(sc, "Run numeric LU with these values for correct pivoting?");
             BigDecimal numericDetLU = tracedNumericDeterminant(numericData, tracer, detailedNumeric);
             System.out.printf("Numeric determinant (LU-based): %.6f%n", numericDetLU);
 
             return;
+        } else {
+            BigDecimal[][] numericData = new BigDecimal[m.n][m.n];
+            for (int i = 0; i < m.n; i++) {
+                for (int j = 0; j < m.n; j++) {
+                    numericData[i][j] = BigDecimal.valueOf(m.data[i][j].eval(new HashMap<>()));
+                }
+            }
+            boolean detailedOutput = askYesNo(sc, "Detailed step-by-step numeric LU?");
+            BigDecimal numericDet = tracedNumericDeterminant(numericData, tracer, detailedOutput);
+            System.out.printf("Numeric determinant (LU based): %.6f%n", numericDet);
         }
-
-        // Pure numeric mode
-        BigDecimal[][] numericData = new BigDecimal[m.n][m.n];
-        for (int i = 0; i < m.n; i++)
-            for (int j = 0; j < m.n; j++)
-                numericData[i][j] = BigDecimal.valueOf(m.data[i][j].eval(new HashMap<>()));
-
-        boolean detailedOutput = askYesNo(sc, "Detailed step-by-step numeric LU?");
-        BigDecimal numericDet = tracedNumericDeterminant(numericData, tracer, detailedOutput);
-        System.out.printf("Numeric determinant (LU based): %.6f%n", numericDet);
 
         repeatWithReducedMatrix(m, varsUsed, sc, tracer);
     }
@@ -983,6 +1006,15 @@ public class Main {
         runDeterminantProcess(m, varsUsed, sc, tracer);
 
         while (askYesNo(sc, "Compute determinant of reduced matrix?")) {
+            m.printMatrix();
+
+            System.out.print("Available row indices: ");
+            for (int i = 0; i < m.n; i++) System.out.print(i + " ");
+            System.out.println();
+
+            System.out.print("Available column indices: ");
+            for (int i = 0; i < m.n; i++) System.out.print(i + " ");
+            System.out.println();
 
             int row = askInt(sc, "Enter row index to remove (0-based): ");
             int col = askInt(sc, "Enter column index to remove (0-based): ");
@@ -994,6 +1026,7 @@ public class Main {
 
             m = m.removeRowCol(row, col);
             varsUsed.addAll(collectVars(m));
+            System.out.println("\nReduced matrix:");
             m.printMatrix();
 
             runDeterminantProcess(m, varsUsed, sc, tracer);
