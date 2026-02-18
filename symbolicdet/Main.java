@@ -16,7 +16,7 @@ public class Main {
         //smaller numbers
         abstract double eval(Map<String, Double> vars);
 
-        //extremely big numbers
+        //huge numbers
         abstract BigDecimal evalBD(Map<String, Double> vars);
     }
 
@@ -59,7 +59,7 @@ public class Main {
             this.value = value;
         }
 
-        //        @Override
+//        @Override
 //        public String toExpr() {
 //            return String.format(Locale.US, "%.6f", value);
 //        }
@@ -858,7 +858,6 @@ public class Main {
             boolean detailedNumeric = askYesNo(sc, "Run numeric LU with these values for correct pivoting?");
             BigDecimal numericDetLU = tracedNumericDeterminant(numericData, tracer, detailedNumeric);
             System.out.printf("Numeric determinant (LU-based): %.6f%n", numericDetLU);
-
             return;
         } else {
             BigDecimal[][] numericData = new BigDecimal[m.n][m.n];
@@ -1000,36 +999,58 @@ public class Main {
                 }
         }
 
-        Matrix m = new Matrix(matrix);
-        m.printMatrix();
+        Matrix original = new Matrix(matrix);
+        Matrix currentReduced = null;
 
-        runDeterminantProcess(m, varsUsed, sc, tracer);
+        original.printMatrix();
+        runDeterminantProcess(original, varsUsed, sc, tracer);
 
         while (askYesNo(sc, "Compute determinant of reduced matrix?")) {
-            m.printMatrix();
+
+            Matrix target;
+
+            if (currentReduced != null && currentReduced.n < original.n) {
+                System.out.println("\nChoose matrix to reduce:");
+                System.out.println("1) Current reduced matrix (" + currentReduced.n + "x" + currentReduced.n + ")");
+                System.out.println("2) Original full matrix (" + original.n + "x" + original.n + ")");
+
+                int choice = askInt(sc, "Enter your choice: ");
+                target = (choice == 1) ? currentReduced : original;
+            } else {
+                target = original;
+            }
+
+            if (target.n <= 1) {
+                System.out.println("Matrix is 1x1 — cannot reduce further.");
+                continue;
+            }
+
+            System.out.println("\nMatrix selected for reduction:");
+            target.printMatrix();
 
             System.out.print("Available row indices: ");
-            for (int i = 0; i < m.n; i++) System.out.print(i + " ");
+            for (int i = 0; i < target.n; i++) System.out.print(i + " ");
             System.out.println();
 
             System.out.print("Available column indices: ");
-            for (int i = 0; i < m.n; i++) System.out.print(i + " ");
+            for (int i = 0; i < target.n; i++) System.out.print(i + " ");
             System.out.println();
 
             int row = askInt(sc, "Enter row index to remove (0-based): ");
             int col = askInt(sc, "Enter column index to remove (0-based): ");
 
-            if (row < 0 || row >= m.n || col < 0 || col >= m.n) {
+            if (row < 0 || row >= target.n || col < 0 || col >= target.n) {
                 System.out.println("Invalid indices. Try again.");
                 continue;
             }
 
-            m = m.removeRowCol(row, col);
-            varsUsed.addAll(collectVars(m));
-            System.out.println("\nReduced matrix:");
-            m.printMatrix();
+            currentReduced = target.removeRowCol(row, col);
+            varsUsed.addAll(collectVars(currentReduced));
 
-            runDeterminantProcess(m, varsUsed, sc, tracer);
+            System.out.println("\nReduced matrix:");
+            currentReduced.printMatrix();
+
+            runDeterminantProcess(currentReduced, varsUsed, sc, tracer);
         }
     }
 }

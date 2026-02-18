@@ -2,31 +2,9 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
 import java.util.regex.*;
+import symbolicdet.symbolic.poly.*;
 
 public class PolySimplifier {
-
-    private static class PolyTerm {
-        BigDecimal coeff;
-        int xx, lx, dx; // exponents
-
-        PolyTerm(BigDecimal coeff, int xx, int lx, int dx) {
-            this.coeff = coeff;
-            this.xx = xx;
-            this.lx = lx;
-            this.dx = dx;
-        }
-
-        PolyTerm(double coeff, int xx, int lx, int dx) {
-            this(BigDecimal.valueOf(coeff), xx, lx, dx);
-        }
-
-        @Override
-        public String toString() {
-            return String.format(Locale.US,
-                    "coef=%s, x^%d l^%d d^%d",
-                    coeff.toPlainString(), xx, lx, dx);
-        }
-    }
 
     private static BigDecimal powBD(BigDecimal base, int exp) {
         return base.pow(exp, MathContext.DECIMAL128);
@@ -189,15 +167,15 @@ public class PolySimplifier {
                 List<PolyTerm> res;
                 switch (tok) {
                     case "+":
-                        res = add(a, b);
+                        res = PolynomialOps.add(a, b);
 //                        log.append("  add -> ").append(res).append("\n");
                         break;
                     case "-":
-                        res = add(a, negate(b));
+                        res = PolynomialOps.add(a, PolynomialOps.negate(b));
 //                        log.append("  sub -> ").append(res).append("\n");
                         break;
                     case "*":
-                        res = multiply(a, b);
+                        res = PolynomialOps.multiply(a, b);
 //                        log.append("  mul -> ").append(res).append("\n");
                         break;
                     case "/":
@@ -221,7 +199,7 @@ public class PolySimplifier {
                                 BigDecimal invCoeff = BigDecimal.ONE.divide(t.coeff, MathContext.DECIMAL128);
                                 inverted.add(new PolyTerm(invCoeff, -t.xx, -t.lx, -t.dx));
                             }
-                            res = multiply(a, inverted);
+                            res = PolynomialOps.multiply(a, inverted);
                         }
                         break;
 
@@ -235,122 +213,6 @@ public class PolySimplifier {
 //            log.append("  stack now top=").append(stack.peek()).append("\n\n");
         }
         //        log.append("evalPostfix combined -> ").append(out).append("\n");
-        return combine(stack.pop());
-    }
-
-    private static List<PolyTerm> negate(List<PolyTerm> list) {
-        List<PolyTerm> r = new ArrayList<>();
-        for (PolyTerm t : list)
-            r.add(new PolyTerm(t.coeff.negate(), t.xx, t.lx, t.dx));
-        return r;
-    }
-
-
-    private static List<PolyTerm> add(List<PolyTerm> a, List<PolyTerm> b) {
-        List<PolyTerm> out = new ArrayList<>(a);
-        out.addAll(b);
-        return combine(out);
-    }
-
-    private static List<PolyTerm> multiply(List<PolyTerm> a, List<PolyTerm> b) {
-        List<PolyTerm> res = new ArrayList<>();
-        for (PolyTerm A : a)
-            for (PolyTerm B : b)
-                res.add(new PolyTerm(
-                        A.coeff.multiply(B.coeff, MathContext.DECIMAL128),
-                        A.xx + B.xx,
-                        A.lx + B.lx,
-                        A.dx + B.dx));
-        return combine(res);
-    }
-
-    private static List<PolyTerm> combine(List<PolyTerm> list) {
-        Map<String, BigDecimal> map = new HashMap<>();
-
-        for (PolyTerm t : list) {
-            String key = t.xx + "," + t.lx + "," + t.dx;
-            map.put(key, map.getOrDefault(key, BigDecimal.ZERO)
-                    .add(t.coeff, MathContext.DECIMAL128));
-        }
-
-        List<PolyTerm> out = new ArrayList<>();
-        for (Map.Entry<String, BigDecimal> e : map.entrySet()) {
-            if (e.getValue().abs().compareTo(new BigDecimal("1e-4")) < 0)
-                continue; // treat as zero
-
-            String[] p = e.getKey().split(",");
-            int xx = Integer.parseInt(p[0]);
-            int lx = Integer.parseInt(p[1]);
-            int dx = Integer.parseInt(p[2]);
-
-            out.add(new PolyTerm(e.getValue(), xx, lx, dx));
-        }
-
-        return out;
-    }
-
-
-    private static String formatTerms(List<PolyTerm> terms) {
-        if (terms.isEmpty()) return "0";
-
-        // Sort by exponents: x > l > D
-        terms.sort((a, b) -> {
-            int c = Integer.compare(b.xx, a.xx);
-            if (c != 0) return c;
-            c = Integer.compare(b.lx, a.lx);
-            if (c != 0) return c;
-            return Integer.compare(b.dx, a.dx);
-        });
-
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-
-        for (PolyTerm t : terms) {
-            // Skip near-zero coefficients
-            if (t.coeff.abs().compareTo(new BigDecimal("1e-4")) < 0) continue;
-
-            BigDecimal c = t.coeff;
-            boolean negative = c.signum() < 0;
-            BigDecimal abs = c.abs();
-
-            boolean needCoeff = !(abs.compareTo(BigDecimal.ONE) == 0 && (t.xx + t.lx + t.dx) > 0);
-
-            // Append sign
-            if (!first) {
-                sb.append(negative ? " - " : " + ");
-            } else if (negative) {
-                sb.append("-");
-            }
-            first = false;
-
-            // Append coefficient
-            if (needCoeff) {
-                // If integer, print without decimal point
-                if (abs.stripTrailingZeros().scale() <= 0) {
-                    sb.append(abs.toBigIntegerExact());
-                } else {
-                    // Otherwise, print with minimal decimal places
-                    sb.append(abs.stripTrailingZeros().toPlainString());
-                }
-            }
-
-            // Append variables
-            if (t.xx > 0) {
-                sb.append(needCoeff ? "*" : "").append("x");
-                if (t.xx > 1) sb.append("^").append(t.xx);
-            }
-            if (t.lx > 0) {
-                sb.append((t.xx > 0 || needCoeff) ? "*" : "").append("l");
-                if (t.lx > 1) sb.append("^").append(t.lx);
-            }
-            if (t.dx > 0) {
-                sb.append((t.xx > 0 || t.lx > 0 || needCoeff) ? "*" : "").append("D");
-                if (t.dx > 1) sb.append("^").append(t.dx);
-            }
-        }
-
-        String out = sb.toString().trim();
-        if (out.startsWith("+ ")) out = out.substring(2);
-        return out.isEmpty() ? "0" : out;
+        return PolynomialOps.combine(stack.pop());
     }
 }
