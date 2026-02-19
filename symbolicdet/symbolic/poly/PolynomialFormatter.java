@@ -65,10 +65,15 @@ public final class PolynomialFormatter {
                 sb.append((t.xx > 0 || t.lx > 0 || needCoeff) ? "*" : "").append("d");
                 if (t.dx > 1) sb.append("^").append(t.dx);
             }
+            if (t.lambdax > 0) {
+                sb.append((t.xx > 0 || t.lx > 0 || t.dx > 0 || needCoeff) ? "*" : "")
+                        .append("λ");
+                if (t.lambdax > 1) sb.append("^").append(t.lambdax);
         }
-
-        String out = sb.toString().trim();
-        if (out.startsWith("+ ")) out = out.substring(2);
-        return out.isEmpty() ? "0" : out;
     }
+
+    String out = sb.toString().trim();
+        if(out.startsWith("+ "))out =out.substring(2);
+        return out.isEmpty()?"0":out;
+}
 }

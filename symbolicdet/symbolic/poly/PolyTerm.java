@@ -5,17 +5,18 @@ import java.util.Locale;
 
 public final class PolyTerm {
     public BigDecimal coeff;
-    public int xx, lx, dx;
+    public int xx, lx, dx, lambdax;
 
-    public PolyTerm(BigDecimal coeff, int xx, int lx, int dx) {
+    public PolyTerm(BigDecimal coeff, int xx, int lx, int dx, int lambdax) {
         this.coeff = coeff;
         this.xx = xx;
         this.lx = lx;
         this.dx = dx;
+        this.lambdax = lambdax;
     }
 
-    public PolyTerm(double coeff, int xx, int lx, int dx) {
-        this(BigDecimal.valueOf(coeff), xx, lx, dx);
+    public PolyTerm(double coeff, int xx, int lx, int dx, int lambdax) {
+        this(BigDecimal.valueOf(coeff), xx, lx, dx, lambdax);
     }
 
     @Override

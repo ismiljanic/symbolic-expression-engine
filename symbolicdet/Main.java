@@ -45,7 +45,6 @@ public class Main {
             matrix = getPredefinedTestMatrix4(varsUsed);
         } else if (n > SYMBOLIC_LIMIT) {
             boolean manual = askYesNo(sc, "Do you want to enter matrix manually?");
-
             if (manual) {
                 System.out.println("Enter matrix elements (variables or numbers):");
                 for (int i = 0; i < n; i++)

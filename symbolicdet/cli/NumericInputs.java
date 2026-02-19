@@ -6,15 +6,17 @@ public class NumericInputs {
     private double xValue;
     private double lValue;
     private double dValue;
+    private double lambdaValue;
 
-    public NumericInputs(double x, double l, double d) {
+    public NumericInputs(double x, double l, double d, double lambda) {
         this.xValue = x;
         this.lValue = l;
         this.dValue = d;
+        this.lambdaValue = lambda;
     }
 
-    public static NumericInputs collectBaseInputs(Scanner sc, boolean needXL, boolean needD) {
-        double x = 0, l = 0, d = 0;
+    public static NumericInputs collectBaseInputs(Scanner sc, boolean needXL, boolean needD, boolean needLambda) {
+        double x = 0, l = 0, d = 0, lambda = 0;
 
         if (needXL) {
             System.out.print("Enter value for x: ");
@@ -29,9 +31,15 @@ public class NumericInputs {
             d = sc.nextDouble();
             sc.nextLine();
         }
+        if (needLambda) {
+            System.out.print("Enter value for λ: ");
+            lambda = sc.nextDouble();
+            sc.nextLine();
+        }
 
-        return new NumericInputs(x, l, d);
+        return new NumericInputs(x, l, d, lambda);
     }
+
     public static int askInt(Scanner scanner, String prompt) {
         while (true) {
             System.out.print(prompt + " ");
@@ -65,5 +73,13 @@ public class NumericInputs {
 
     public void setdValue(double dValue) {
         this.dValue = dValue;
+    }
+
+    public double getLambdaValue() {
+        return lambdaValue;
+    }
+
+    public void setLambdaValue(double lambdaValue) {
+        this.lambdaValue = lambdaValue;
     }
 }

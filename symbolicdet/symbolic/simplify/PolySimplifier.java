@@ -29,7 +29,7 @@ public class PolySimplifier {
         return PolynomialFormatter.formatTerms(terms);
     }
 
-    public static BigDecimal evaluateNumeric(String rawExpr, BigDecimal xVal, BigDecimal lVal, BigDecimal DVal) {
+    public static BigDecimal evaluateNumeric(String rawExpr, BigDecimal xVal, BigDecimal lVal, BigDecimal DVal, BigDecimal lambdax) {
         StringBuilder log = new StringBuilder();
 
         String expr = Preprocessor.preprocess(rawExpr, log);
@@ -37,6 +37,6 @@ public class PolySimplifier {
         List<String> postfix = InfixPostfixConverter.convertToPostfix(tokens, log);
 
         List<PolyTerm> terms = PostfixPolynomialEvaluator.evaluatePostfixExpression(postfix, log);
-        return PolynomialNumericEvaluator.evaluatePolynomial(terms, xVal, lVal, DVal);
+        return PolynomialNumericEvaluator.evaluatePolynomial(terms, xVal, lVal, DVal, lambdax);
     }
 }

@@ -19,19 +19,23 @@ public class PostfixPolynomialEvaluator {
             if (token.matches("\\d+\\.\\d+|\\d+")) {
                 double numericValue = Double.parseDouble(token);
                 evaluationStack.push(
-                        Collections.singletonList(new PolyTerm(numericValue, 0, 0, 0))
+                        Collections.singletonList(new PolyTerm(numericValue, 0, 0, 0, 0))
                 );
             } else if (token.equalsIgnoreCase("x")) {
                 evaluationStack.push(
-                        Collections.singletonList(new PolyTerm(1.0, 1, 0, 0))
+                        Collections.singletonList(new PolyTerm(1.0, 1, 0, 0, 0))
                 );
             } else if (token.equalsIgnoreCase("l")) {
                 evaluationStack.push(
-                        Collections.singletonList(new PolyTerm(1.0, 0, 1, 0))
+                        Collections.singletonList(new PolyTerm(1.0, 0, 1, 0, 0))
                 );
             } else if (token.equalsIgnoreCase("d")) {
                 evaluationStack.push(
-                        Collections.singletonList(new PolyTerm(1.0, 0, 0, 1))
+                        Collections.singletonList(new PolyTerm(1.0, 0, 0, 1, 0))
+                );
+            } else if (token.equalsIgnoreCase("lambda")) {
+                evaluationStack.push(
+                        Collections.singletonList(new PolyTerm(1.0, 0, 0, 0, 1))
                 );
             } else if (token.equals("+") || token.equals("-")
                     || token.equals("*") || token.equals("/")) {
@@ -57,7 +61,8 @@ public class PostfixPolynomialEvaluator {
                         if (rightOperand.size() == 1 && leftOperand.size() == 1
                                 && rightOperand.get(0).xx == 0
                                 && rightOperand.get(0).lx == 0
-                                && rightOperand.get(0).dx == 0) {
+                                && rightOperand.get(0).dx == 0
+                                && rightOperand.get(0).lambdax == 0) {
 
                             BigDecimal dividedCoefficient = getBigDecimal(rightOperand, leftOperand);
 
@@ -66,7 +71,8 @@ public class PostfixPolynomialEvaluator {
                                             dividedCoefficient,
                                             leftOperand.get(0).xx,
                                             leftOperand.get(0).lx,
-                                            leftOperand.get(0).dx
+                                            leftOperand.get(0).dx,
+                                            leftOperand.get(0).lambdax
                                     )
                             );
                         } else {
@@ -88,7 +94,8 @@ public class PostfixPolynomialEvaluator {
                                                 invertedCoefficient,
                                                 -term.xx,
                                                 -term.lx,
-                                                -term.dx
+                                                -term.dx,
+                                                -term.lambdax
                                         )
                                 );
                             }

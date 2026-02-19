@@ -53,14 +53,19 @@ public class DeterminantService {
 
             List<String> xLVars = varsUsed.stream().filter(v -> v.matches("x_l([+-]\\d+)?")).toList();
             List<String> tLVars = varsUsed.stream().filter(v -> v.matches("t_l([+-]\\d+)?")).toList();
+            List<String> lambdaVars = varsUsed.stream()
+                    .filter(v -> v.equals("lambda") || v.matches("lambda([+-]\\d+)?"))
+                    .toList();
 
             boolean needXL = !xLVars.isEmpty() || !tLVars.isEmpty();
             boolean needD = varsUsed.contains("d") || !tLVars.isEmpty();
+            boolean needLambda = !lambdaVars.isEmpty() || varsUsed.contains("lambda");
 
-            NumericInputs inputs = collectBaseInputs(scanner, needXL, needD);
+            NumericInputs inputs = collectBaseInputs(scanner, needXL, needD, needLambda);
             variables.put("x", inputs.getxValue());
             variables.put("l", inputs.getlValue());
             variables.put("d", inputs.getdValue());
+            variables.put("lambda", inputs.getLambdaValue());
 
             for (String vars : xLVars) if (!variables.containsKey(vars)) populateXLVar(variables, vars, inputs);
             for (String vars : tLVars) if (!variables.containsKey(vars)) populateTLVar(variables, vars, inputs);

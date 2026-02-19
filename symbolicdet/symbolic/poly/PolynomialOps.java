@@ -12,7 +12,7 @@ public final class PolynomialOps {
     public static List<PolyTerm> negate(List<PolyTerm> list) {
         List<PolyTerm> r = new ArrayList<>();
         for (PolyTerm t : list)
-            r.add(new PolyTerm(t.coeff.negate(), t.xx, t.lx, t.dx));
+            r.add(new PolyTerm(t.coeff.negate(), t.xx, t.lx, t.dx, t.lambdax));
         return r;
     }
 
@@ -28,9 +28,7 @@ public final class PolynomialOps {
             for (PolyTerm B : b)
                 res.add(new PolyTerm(
                         A.coeff.multiply(B.coeff, MathContext.DECIMAL128),
-                        A.xx + B.xx,
-                        A.lx + B.lx,
-                        A.dx + B.dx));
+                        A.xx + B.xx, A.lx + B.lx, A.dx + B.dx, A.lambdax + B.lambdax));
         return combine(res);
     }
 
@@ -38,7 +36,7 @@ public final class PolynomialOps {
         Map<String, BigDecimal> map = new HashMap<>();
 
         for (PolyTerm t : list) {
-            String key = t.xx + "," + t.lx + "," + t.dx;
+            String key = t.xx + "," + t.lx + "," + t.dx + "," + t.lambdax;
             map.put(key, map.getOrDefault(key, BigDecimal.ZERO)
                     .add(t.coeff, MathContext.DECIMAL128));
         }
@@ -52,8 +50,9 @@ public final class PolynomialOps {
             int xx = Integer.parseInt(p[0]);
             int lx = Integer.parseInt(p[1]);
             int dx = Integer.parseInt(p[2]);
+            int lambdax = Integer.parseInt(p[3]);
 
-            out.add(new PolyTerm(e.getValue(), xx, lx, dx));
+            out.add(new PolyTerm(e.getValue(), xx, lx, dx, lambdax));
         }
 
         return out;
