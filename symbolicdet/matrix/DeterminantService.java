@@ -4,6 +4,7 @@ import symbolicdet.cli.NumericInputs;
 import symbolicdet.symbolic.expressions.Symbol;
 import symbolicdet.symbolic.simplify.PolySimplifier;
 import symbolicdet.utils.CheckIfNumeric;
+import symbolicdet.utils.FactorizeFinalExpression;
 import symbolicdet.utils.SymbolicTracer;
 
 import java.math.BigDecimal;
@@ -45,6 +46,15 @@ public class DeterminantService {
             String expandedPoly = PolySimplifier.expandSymbolicOnly(simplified);
             System.out.println("\nFinal expanded polynomial:");
             System.out.println(expandedPoly);
+
+            System.out.println("\nFactorization options:");
+            System.out.println("  1) Factor & group");
+            System.out.println("  2) Skip");
+            System.out.print("Choose: ");
+            String choice = scanner.nextLine().trim();
+            if (choice.equals("1")) {
+                System.out.println(FactorizeFinalExpression.factor(expandedPoly));
+            }
 
             if (!askYesNo(scanner, "Calculate numeric determinant with variables?")) return;
 
