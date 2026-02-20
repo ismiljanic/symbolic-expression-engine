@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Determinant Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] },
+            options: { skipHtmlTags: ['script','noscript','style','textarea'] }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.min.js"></script>
+    <style>
+        {{CSS}}
+    </style>
+</head>
+<body>
+<div class="layout">
+    <nav>
+        <div class="logo">symbolicdet</div>
+        <div class="nav-section">sections</div>
+        <a href="#expanded">Expanded polynomial</a>
+        <a href="#factored">Factored form</a>
+        <a href="#terminal">Terminal output</a>
+        <div class="timestamp-nav">Generated<br>{{TIMESTAMP}}</div>
+        <button id="themeToggle">toggle theme</button>
+    </nav>
+    <main>
+        <h1>Determinant Analysis</h1>
+        <div class="subtitle">symbolic LU decomposition &mdash; polynomial factorization</div>
+
+        <section id="expanded">
+            <div class="section-title">Expanded Polynomial</div>
+            <div class="raw-poly">{{ORIGINAL_POLY}}</div>
+        </section>
+
+        <section id="factored">
+            <div class="section-title">Factored Form &mdash; grouped by &lambda;, then x</div>
+            {{GROUPS_HTML}}
+        </section>
+
+        <section id="terminal">
+            <div class="section-title">Terminal Representation</div>
+            <div class="terminal-output">{{TERMINAL_OUTPUT}}</div>
+        </section>
+
+        <footer>symbolicdet &mdash; symbolic determinant engine</footer>
+    </main>
+</div>
+<script>
+    {{JS}}
+</script>
+</body>
+</html>
