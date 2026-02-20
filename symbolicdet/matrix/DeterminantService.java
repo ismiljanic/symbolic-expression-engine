@@ -7,6 +7,7 @@ import symbolicdet.utils.CheckIfNumeric;
 import symbolicdet.utils.FactorizeFinalExpression;
 import symbolicdet.utils.SymbolicTracer;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -21,7 +22,7 @@ import static symbolicdet.utils.PopulateXLVariables.populateXLVar;
 import static symbolicdet.utils.TraceNumericDeterminant.tracedNumericDeterminant;
 
 public class DeterminantService {
-    public static void runDeterminantProcess(Matrix matrix, Set<String> varsUsed, Scanner scanner, SymbolicTracer tracer, Map<String, Double> persistentVars) {
+    public static void runDeterminantProcess(Matrix matrix, Set<String> varsUsed, Scanner scanner, SymbolicTracer tracer, Map<String, Double> persistentVars) throws IOException {
         matrix.printMatrix();
 
         boolean allNumeric = true;
@@ -53,7 +54,7 @@ public class DeterminantService {
             System.out.print("Choose: ");
             String choice = scanner.nextLine().trim();
             if (choice.equals("1")) {
-                System.out.println(FactorizeFinalExpression.factor(expandedPoly));
+                System.out.println(FactorizeFinalExpression.factor(expandedPoly, matrix.getN()));
             }
 
             if (!askYesNo(scanner, "Calculate numeric determinant with variables?")) return;

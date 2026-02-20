@@ -3,6 +3,7 @@ package symbolicdet.cli;
 import symbolicdet.matrix.Matrix;
 import symbolicdet.utils.SymbolicTracer;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -13,7 +14,7 @@ import static symbolicdet.matrix.DeterminantService.runDeterminantProcess;
 import static symbolicdet.utils.ExtractVariablesFromMatrix.collectVars;
 
 public class MatrixPrompt {
-    public static void repeatWithReducedMatrix(Matrix original, Set<String> varsUsed, Scanner sc, SymbolicTracer tracer, Map<String, Double> persistentVars, Matrix currentReduced) {
+    public static void repeatWithReducedMatrix(Matrix original, Set<String> varsUsed, Scanner sc, SymbolicTracer tracer, Map<String, Double> persistentVars, Matrix currentReduced) throws IOException {
         if (currentReduced == null) currentReduced = original;
 
         while (askYesNo(sc, "Reduce a matrix further?")) {

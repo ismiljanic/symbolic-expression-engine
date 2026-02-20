@@ -6,6 +6,7 @@ import symbolicdet.symbolic.expressions.Symbol;
 import symbolicdet.symbolic.expressions.Variable;
 import symbolicdet.utils.SymbolicTracer;
 
+import java.io.IOException;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
@@ -25,7 +26,7 @@ public class Main {
     static Map<String, Double> persistentVars = new HashMap<>();
     static Matrix currentReduced = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         final int SYMBOLIC_LIMIT = 2;
         Scanner sc = new Scanner(System.in);
         SymbolicTracer tracer = new SymbolicTracer();

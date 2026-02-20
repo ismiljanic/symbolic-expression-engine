@@ -1,9 +1,7 @@
 package symbolicdet.symbolic.simplify;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.*;
-import java.util.regex.*;
 
 import symbolicdet.symbolic.eval.PolynomialNumericEvaluator;
 import symbolicdet.symbolic.parser.*;
