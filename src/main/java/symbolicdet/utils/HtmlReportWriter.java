@@ -23,34 +23,33 @@ import java.util.regex.Pattern;
  */
 public class HtmlReportWriter {
 
-    private static final String RES = "resources/";
-
     public static void write(String terminalOutput, String latexJson, String originalPoly, String type, int rows, int cols) {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String groupsHtml = buildGroupsHtml(latexJson);
-
-        String html = loadResource("report.html")
-                .replace("{{CSS}}", loadResource("report.css"))
-                .replace("{{JS}}", loadResource("report.js"))
-                .replace("{{TIMESTAMP}}", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .replace("{{ORIGINAL_POLY}}", ExpressionConverter.escapeHtml(originalPoly))
-                .replace("{{GROUPS_HTML}}", groupsHtml)
-                .replace("{{TERMINAL_OUTPUT}}", ExpressionConverter.escapeHtml(terminalOutput));
-
-        try {
-            Path reportDir = Path.of("report");
-            if (!Files.exists(reportDir)) {
-                Files.createDirectories(reportDir);
-            }
-
-            String filename = String.format("report_%s_%dx%d_%s.html", type, rows, cols, timestamp);
-            Path filePath = reportDir.resolve(filename);
-
-            Files.writeString(filePath, html);
-            System.out.println("\nHTML report saved: " + filePath.toString());
-        } catch (IOException e) {
-            System.out.println("Could not write HTML report: " + e.getMessage());
-        }
+//        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+//        String groupsHtml = buildGroupsHtml(latexJson);
+//
+//        String html = loadResource("static/report.html")
+//                .replace("{{CSS}}", loadResource("static/report.css"))
+//                .replace("{{JS}}", loadResource("static/report.js"))
+//                .replace("{{TIMESTAMP}}", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+//                .replace("{{ORIGINAL_POLY}}", ExpressionConverter.escapeHtml(originalPoly))
+//                .replace("{{GROUPS_HTML}}", groupsHtml)
+//                .replace("{{TERMINAL_OUTPUT}}", ExpressionConverter.escapeHtml(terminalOutput));
+//
+//        try {
+//            Path reportDir = Path.of("report");
+//            if (!Files.exists(reportDir)) {
+//                Files.createDirectories(reportDir);
+//            }
+//
+//            String filename = String.format("report_%s_%dx%d_%s.html", type, rows, cols, timestamp);
+//            Path filePath = reportDir.resolve(filename);
+//
+//            Files.writeString(filePath, html);
+//            System.out.println("\nHTML report saved: " + filePath.toString());
+//        } catch (IOException e) {
+//            System.out.println("Could not write HTML report: " + e.getMessage());
+//        }
+        System.out.println("write was successful");
     }
 
     // -------------------------------------------------------------------------
@@ -58,11 +57,18 @@ public class HtmlReportWriter {
     // -------------------------------------------------------------------------
 
     private static String loadResource(String filename) {
-        try {
-            return Files.readString(Path.of(RES + filename));
+        try (var is = HtmlReportWriter.class
+                .getClassLoader()
+                .getResourceAsStream(filename)) {
+
+            if (is == null) {
+                throw new IllegalStateException("Resource not found on classpath: " + filename);
+            }
+
+            return new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+
         } catch (IOException e) {
-            throw new IllegalStateException("Resource not found: " + RES + filename
-                    + " — make sure the resources/ folder is in your working directory.", e);
+            throw new IllegalStateException("Failed to load resource: " + filename, e);
         }
     }
 
