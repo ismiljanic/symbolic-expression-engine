@@ -60,55 +60,68 @@ All matrix entries are symbolic expressions in `x_l`, `t_l` and integer coeffici
 .
 ├── docs
     ├── TASK.md/
-├── symbolicdet
-    ├── cas/
-    ├── cli/
-    │   ├── MatrixPrompt.java
-    │   └── NumericInputs.java
-    │   └── YesNoPrompt.java
-    ├── matrix/
-    │   ├── DeterminantService.java
-    │   ├── Matrix.java
-    │   ├── PredefinedMatrices.java
-    │   ├── SubstituteNumericMatrix.java
-    ├── symbolic/
-    │   └── eval/
-    │       ├── CalculateSymbolicLUDeterminant.java
-    │       ├── PolynomialNumericEvaluator.java
-    │   └── expressions/
-    │       ├── Constant.java
-    │       ├── Expression.java
-    │       ├── Symbol.java
-    │       ├── Variable.java
-    │   └── parser/
-    │       ├── ExpressionParser.java
-    │       ├── InfixPostfixConverter.java
-    │       ├── ParserSymbolicInput.java
-    │       ├── PostfixPolyNomialEvaluator.java
-    │       ├── Preprocessor.java
-    │       ├── Tokenizer.java
-    │   └── poly/
-    │       ├── PolynomialFormatter.java
-    │       ├── PolynomialOps.java
-    │       ├── PolyTerm.java
-    │   └── simplify/
-    │       ├── PolySimplifier.java
-    │       ├── SimplifySymbolic.java
-    └── utils/
-    │       ├── CheckIfNumeric.java
-    │       ├── ComputeOffset.java
-    │       ├── ExpandSymbolic.java
-    │       ├── ExtractVariablesFromMatrix.java
-    │       ├── PopulateRemainingVariables.java
-    │       ├── PopulateTLVaribales.java
-    │       ├── PopulateXLVaribales.java
-    │       ├── PrintNumericMatrix.java
-    │       ├── PrintSymbolicMatrix.java
-    │       ├── SymbolicTracer.java
-    │       ├── TraceNumericDeterminant.java
-    ├── Main.java
+├── frontend
+├── src
+    ├── main/
+        ├── java/
+            ├── symbolicdet/
+                ├── cli/
+                │   ├── MatrixPrompt.java
+                │   └── NumericInputs.java
+                │   └── YesNoPrompt.java
+                ├── matrix/
+                │   ├── DeterminantService.java
+                │   ├── Matrix.java
+                │   ├── PredefinedMatrices.java
+                │   ├── SubstituteNumericMatrix.java
+                ├── symbolic/
+                │   └── eval/
+                │       ├── CalculateSymbolicLUDeterminant.java
+                │       ├── PolynomialNumericEvaluator.java
+                │   └── expressions/
+                │       ├── Constant.java
+                │       ├── Expression.java
+                │       ├── Symbol.java
+                │       ├── Variable.java
+                │   └── parser/
+                │       ├── ExpressionParser.java
+                │       ├── InfixPostfixConverter.java
+                │       ├── ParserSymbolicInput.java
+                │       ├── PostfixPolyNomialEvaluator.java
+                │       ├── Preprocessor.java
+                │       ├── Tokenizer.java
+                │   └── poly/
+                │       ├── PolynomialFormatter.java
+                │       ├── PolynomialOps.java
+                │       ├── PolyTerm.java
+                │   └── simplify/
+                │       ├── PolySimplifier.java
+                │       ├── SimplifySymbolic.java
+                └── utils/
+                │       ├── CheckIfNumeric.java
+                │       ├── ComputeOffset.java
+                │       ├── ExpandSymbolic.java
+                │       ├── ExtractVariablesFromMatrix.java
+                │       ├── PopulateRemainingVariables.java
+                │       ├── PopulateTLVaribales.java
+                │       ├── PopulateXLVaribales.java
+                │       ├── PrintNumericMatrix.java
+                │       ├── PrintSymbolicMatrix.java
+                │       ├── SymbolicTracer.java
+                │       ├── TraceNumericDeterminant.java
+                └── web/
+                │       ├── controller/
+                │           ├── DeterminantController.java
+                │       ├── dto
+                │           ├── DeterminantRequest.java
+                │           ├── DeterminantResponse.java
+                │       ├── service
+                │           ├── DeterminantWebService.java
+                │       ├── WebApplication.java
+                ├── Main.java
     ├── .gitignore
     ├── LICENSE
+    ├── pom.xml
     ├── README.md
 ```
 
