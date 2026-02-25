@@ -1,7 +1,3 @@
-"""
-LaTeX factorization script — outputs JSON for HTML report generation.
-Usage: python3 factorize_latex.py "<sympy_expr>"
-"""
 import sys
 import json
 from sympy import *
@@ -33,9 +29,15 @@ for lam_pow in lam_powers:
     x_powers = sorted(inner.keys(), key=lambda k: -int(k.as_base_exp()[1]) if k != 1 else 0)
     terms = []
     for x_pow in x_powers:
-        c = factor(inner[x_pow])
-        term_latex = clean_latex(latex(c * x_pow * lam_pow))
-        terms.append(term_latex)
+        raw = inner[x_pow]
+        factored = factor(raw)
+
+        raw_terms = Add.make_args(raw)
+
+        terms.append({
+            "factored": clean_latex(latex(factored * x_pow * lam_pow)),
+            "from": [clean_latex(latex(t)) for t in raw_terms]
+        })
     groups.append({"lam_exp": lam_exp, "terms": terms})
 
 print(json.dumps(groups))
