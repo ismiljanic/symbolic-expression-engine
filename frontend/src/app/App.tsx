@@ -32,9 +32,9 @@ export default function App() {
             <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
               How it Works
             </a>
-            <Button 
-              variant="default" 
-              className="bg-blue-600 hover:bg-blue-700"
+            <Button
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
               onClick={() => setShowCalculator(!showCalculator)}
             >
               {showCalculator ? "Back to Home" : "Launch Calculator"}
@@ -81,7 +81,7 @@ export default function App() {
                 <Sparkles className="w-4 h-4 text-blue-600" />
                 <span className="text-sm text-blue-700 font-medium">Symbolic Computation Engine</span>
               </motion.div>
-              
+
               <motion.h1
                 className="text-6xl mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent"
                 initial={{ opacity: 0, y: 20 }}
@@ -92,7 +92,7 @@ export default function App() {
                 <br />
                 <span className="text-5xl">Made Simple</span>
               </motion.h1>
-              
+
               <motion.p
                 className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed"
                 initial={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export default function App() {
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 A powerful Java implementation for computing exact algebraic expressions of
-                parameterized tridiagonal matrices with symbolic expansion, simplification,
+                parameterized tridiagonal matrices with symbolic expansion, simplification
                 and high-precision LU validation.
               </motion.p>
 
@@ -110,14 +110,14 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
-                <Button 
-                  size="lg" 
-                  className="bg-blue-600 hover:bg-blue-700 px-8"
+                <Button
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 px-8 cursor-pointer"
                   onClick={() => setShowCalculator(true)}
                 >
                   Launch Calculator
                 </Button>
-                <Button size="lg" variant="outline">
+                <Button size="lg" variant="outline" className="cursor-pointer">
                   View Documentation
                 </Button>
               </motion.div>
@@ -201,7 +201,7 @@ export default function App() {
                 />
                 <FeatureCard
                   icon={Network}
-                  title="Tridiagonal Matrices"
+                  title="Tridiagonal Matrices (coming soon)"
                   description="Specialized support for tridiagonal and band matrices commonly found in scientific computing."
                   delay={0.4}
                 />
@@ -229,14 +229,16 @@ export default function App() {
             >
               <h2 className="text-3xl mb-4">Ready to compute?</h2>
               <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-                Start computing symbolic determinants with precision and speed. 
-                Built for researchers, engineers, and mathematicians.
+                Start computing symbolic determinants with precision and speed.
+                Built for researchers, engineers and mathematicians.
               </p>
               <div className="flex items-center justify-center gap-4">
-                <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-50">
+                <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setShowCalculator(!showCalculator)}
+                >
                   Try Live Demo
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-blue-500">
+                <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-50 cursor-pointer">
                   Read the Paper
                 </Button>
               </div>
@@ -252,9 +254,9 @@ export default function App() {
                   <span>SymbolicDet CAS</span>
                 </div>
                 <div className="flex gap-6">
-                  <a href="#" className="hover:text-gray-900 transition-colors">Documentation</a>
+                  <a href="https://github.com/ismiljanic/symbolic-expression-engine/docs" className="hover:text-gray-900 transition-colors">Documentation</a>
                   <a href="#" className="hover:text-gray-900 transition-colors">API Reference</a>
-                  <a href="#" className="hover:text-gray-900 transition-colors">GitHub</a>
+                  <a href="https://github.com/ismiljanic/symbolic-expression-engine" className="hover:text-gray-900 transition-colors">GitHub</a>
                 </div>
                 <div>© 2026 All rights reserved</div>
               </div>
