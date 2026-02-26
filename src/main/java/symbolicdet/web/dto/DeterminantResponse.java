@@ -75,5 +75,9 @@ public class DeterminantResponse {
 
         public List<String> getTerms() { return terms; }
         public void setTerms(List<String> v) { this.terms = v; }
+        @Override
+        public String toString() {
+            return "FactorizedGroup{factor='" + power + "', terms=" + terms + "}";
+        }
     }
 }

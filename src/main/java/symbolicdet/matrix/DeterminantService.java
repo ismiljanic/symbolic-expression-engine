@@ -54,7 +54,7 @@ public class DeterminantService {
             System.out.print("Choose: ");
             String choice = scanner.nextLine().trim();
             if (choice.equals("1")) {
-                System.out.println(FactorizeFinalExpression.factor(expandedPoly, matrix.getN()));
+                FactorizeFinalExpression.factor(expandedPoly, matrix.getN());
             }
 
             if (!askYesNo(scanner, "Calculate numeric determinant with variables?")) return;

@@ -15,9 +15,8 @@ public class FactorizeFinalExpression {
         String rawTerminal = PythonRunner.run(TERMINAL_SCRIPT, sympyExpr);
         String latexJson = PythonRunner.run(LATEX_SCRIPT, sympyExpr);
         String terminalOutput = ExpressionConverter.toMathNotation(rawTerminal);
-        System.out.println("terminal output: " + terminalOutput);
+        System.out.println(terminalOutput);
         HtmlReportWriter.write(terminalOutput, latexJson, polynomial, "determinant", n, n);
-
         return parseFactorizedOutput(terminalOutput);
     }
 
