@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Determinant Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] },
+            options: { skipHtmlTags: ['script','noscript','style','textarea'] }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.min.js"></script>
+    <style>
+        :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #d6d6cf;
+    --muted: #8a8a82;
+    --text: #1e1e1c;
+    --dim: #5f5f58;
+    --accent: #7a5c2e;
+    --green: #2f6f44;
+    --lam: #2f5d8a;
+}
+
+body.dark {
+    --bg: #0c0c0e;
+    --surface: #131316;
+    --border: #1e1e24;
+    --muted: #3a3a46;
+    --text: #ddd8cc;
+    --dim: #7a7870;
+    --accent: #b8996a;
+    --green: #6a9e7a;
+    --lam: #7a9ab8;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'EB Garamond', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+nav {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 32px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+}
+
+nav .logo {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+nav .nav-section {
+    color: var(--muted);
+    margin: 20px 0 8px;
+    letter-spacing: 0.08em;
+}
+
+nav a {
+    display: block;
+    color: var(--dim);
+    text-decoration: none;
+    padding: 5px 0;
+    transition: color 0.15s;
+}
+
+nav a:hover {
+    color: var(--accent);
+}
+
+.timestamp-nav {
+    color: var(--muted);
+    margin-top: 32px;
+    font-size: 0.65rem;
+    line-height: 1.6;
+}
+
+#themeToggle {
+    margin-top: 24px;
+    width: 100%;
+    padding: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    cursor: pointer;
+}
+
+/* ── Main ─────────────────────────────────────────────────── */
+main {
+    padding: 48px 56px;
+    max-width: 900px;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 48px;
+}
+
+section {
+    margin-bottom: 56px;
+    scroll-margin-top: 32px;
+}
+
+.section-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Raw polynomial ───────────────────────────────────────── */
+.raw-poly {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+    line-height: 2;
+    color: var(--dim);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.raw-poly::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.raw-poly::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 2px;
+}
+
+/* ── Lambda groups ────────────────────────────────────────── */
+.lam-group {
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.group-header {
+    width: 100%;
+    background: var(--surface);
+    border: none;
+    color: var(--text);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-family: 'EB Garamond', serif;
+    font-size: 1rem;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+body.dark .group-header:hover {
+    background: #181820;
+}
+
+body:not(.dark) .group-header:hover {
+    background: #f1f1ed;
+}
+
+.group-label {
+    flex: 1;
+    color: var(--lam);
+}
+
+.group-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.chevron {
+    color: var(--muted);
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+.group-body {
+    display: none;
+    border-top: 1px solid var(--border);
+}
+
+.group-body.open {
+    display: block;
+}
+
+table.terms {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.term-row {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+
+.term-row:last-child {
+    border-bottom: none;
+}
+
+body.dark .term-row:hover {
+    background: #15151c;
+}
+
+body:not(.dark) .term-row:hover {
+    background: #f6f6f3;
+}
+
+.sign {
+    width: 36px;
+    text-align: center;
+    color: var(--muted);
+    padding: 16px 8px 12px;
+    vertical-align: top;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+}
+
+.term {
+    padding: 12px 16px 12px 4px;
+    line-height: 1.8;
+    vertical-align: top;
+    font-size: 1.05rem;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.term::-webkit-scrollbar {
+    height: 3px;
+}
+
+.term::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 2px;
+}
+
+/* ── Terminal output ──────────────────────────────────────── */
+.terminal-output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    background: #f7f9f7;
+    border: 1px solid #ccd8cc;
+    border-radius: 6px;
+    padding: 24px;
+    line-height: 2;
+    color: #2f6f44;
+}
+
+body.dark .terminal-output {
+    background: #0a0f0a;
+    border-color: #1a2a1a;
+    color: var(--green);
+}
+
+/* ── MathJax assistive text (screen-reader labels) ───────── */
+mjx-assistive-mml {
+    display: none !important;
+}
+
+/* ── Math variable colors ─────────────────────────────────── */
+mjx-mi.math-lam {
+    color: var(--lam);
+}
+
+mjx-mi.math-x {
+    color: var(--accent);
+}
+
+mjx-mi.math-l {
+    color: var(--green);
+}
+
+mjx-mi.math-d {
+    color: #9a5c8a;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+    </style>
+</head>
+<body>
+<div class="layout">
+    <nav>
+        <div class="logo">symbolicdet</div>
+        <div class="nav-section">sections</div>
+        <a href="#expanded">Expanded polynomial</a>
+        <a href="#factored">Factored form</a>
+        <a href="#terminal">Terminal output</a>
+        <div class="timestamp-nav">Generated<br>2026-02-20 13:48:58</div>
+        <button id="themeToggle">toggle theme</button>
+    </nav>
+    <main>
+        <h1>Determinant Analysis</h1>
+        <div class="subtitle">symbolic LU decomposition &mdash; polynomial factorization</div>
+
+        <section id="expanded">
+            <div class="section-title">Expanded Polynomial</div>
+            <div class="raw-poly">90*x^3 - 540*x^2*l^2 + 2700*x^2*l - 63*x^2*λ - 3816*x^2 + 1080*x*l^4 - 10800*x*l^3 + 42552*x*l^2 + 252*x*l^2*λ - 1260*x*l*λ - 77760*x*l - 54*x*d + 14*x*λ^2 + 1776*x*λ + 55296*x - 720*l^6 + 10800*l^5 - 252*l^4*λ - 69840*l^4 + 248400*l^3 + 2520*l^3*λ + 108*l^2*d - 28*l^2*λ^2 - 9900*l^2*λ - 510048*l^2 - 540*l*d + 140*l*λ^2 + 18000*l*λ + 570240*l + 828*d + 14*d*λ - 12672*λ - 269568 - 1*λ^3 - 196*λ^2</div>
+        </section>
+
+        <section id="factored">
+            <div class="section-title">Factored Form &mdash; grouped by &lambda;, then x</div>
+            <div class="lam-group">
+    <button class="group-header" onclick="toggle('group_lam_3')">
+        <span class="group-label">Terms with \(\lambda^{3}\)</span>
+        <span class="group-count">1 term</span>
+        <span class="chevron" id="chevron_group_lam_3">&#9660;</span>
+    </button>
+    <div class="group-body" id="group_lam_3">
+        <table class="terms"><tr class="term-row">
+    <td class="sign"></td>
+    <td class="term">\(- \\λ^{3}\)</td>
+</tr>
+</table>
+    </div>
+</div>
+<div class="lam-group">
+    <button class="group-header" onclick="toggle('group_lam_2')">
+        <span class="group-label">Terms with \(\lambda^{2}\)</span>
+        <span class="group-count">2 terms</span>
+        <span class="chevron" id="chevron_group_lam_2">&#9660;</span>
+    </button>
+    <div class="group-body" id="group_lam_2">
+        <table class="terms"><tr class="term-row">
+    <td class="sign"></td>
+    <td class="term">\(14 \\λ^{2} x\)</td>
+</tr>
+<tr class="term-row">
+    <td class="sign">+</td>
+    <td class="term">\(- 28 \\λ^{2} (l^{2} - 5 l + 7)\)</td>
+</tr>
+</table>
+    </div>
+</div>
+<div class="lam-group">
+    <button class="group-header" onclick="toggle('group_lam_1')">
+        <span class="group-label">Terms with \(\lambda\)</span>
+        <span class="group-count">3 terms</span>
+        <span class="chevron" id="chevron_group_lam_1">&#9660;</span>
+    </button>
+    <div class="group-body" id="group_lam_1">
+        <table class="terms"><tr class="term-row">
+    <td class="sign"></td>
+    <td class="term">\(- 63 \\λ x^{2}\)</td>
+</tr>
+<tr class="term-row">
+    <td class="sign">+</td>
+    <td class="term">\(12 \\λ x (21 l^{2} - 105 l + 148)\)</td>
+</tr>
+<tr class="term-row">
+    <td class="sign">+</td>
+    <td class="term">\(2 \\λ (7 d - 126 l^{4} + 1260 l^{3} - 4950 l^{2} + 9000 l - 6336)\)</td>
+</tr>
+</table>
+    </div>
+</div>
+<div class="lam-group">
+    <button class="group-header" onclick="toggle('group_lam_0')">
+        <span class="group-label">Terms with constant</span>
+        <span class="group-count">4 terms</span>
+        <span class="chevron" id="chevron_group_lam_0">&#9660;</span>
+    </button>
+    <div class="group-body" id="group_lam_0">
+        <table class="terms"><tr class="term-row">
+    <td class="sign"></td>
+    <td class="term">\(90 x^{3}\)</td>
+</tr>
+<tr class="term-row">
+    <td class="sign">+</td>
+    <td class="term">\(- 36 x^{2} (15 l^{2} - 75 l + 106)\)</td>
+</tr>
+<tr class="term-row">
+    <td class="sign">+</td>
+    <td class="term">\(- 54 x (d - 20 l^{4} + 200 l^{3} - 788 l^{2} + 1440 l - 1024)\)</td>
+</tr>
+<tr class="term-row">
+    <td class="sign">+</td>
+    <td class="term">\(36 (3 d l^{2} - 15 d l + 23 d - 20 l^{6} + 300 l^{5} - 1940 l^{4} + 6900 l^{3} - 14168 l^{2} + 15840 l - 7488)\)</td>
+</tr>
+</table>
+    </div>
+</div>
+
+        </section>
+
+        <section id="terminal">
+            <div class="section-title">Terminal Representation</div>
+            <div class="terminal-output">det =
+  -1 · λ^3
+  + 14 · x · λ^2
+  + (-28·(l^2 - 5·l + 7)) · λ^2
+  + -63 · x^2 · λ
+  + (12·(21·l^2 - 105·l + 148)) · x · λ
+  + (2·(7·d - 126·l^4 + 1260·l^3 - 4950·l^2 + 9000·l - 6336)) · λ
+  + 90 · x^3
+  + (-36·(15·l^2 - 75·l + 106)) · x^2
+  + (-54·(d - 20·l^4 + 200·l^3 - 788·l^2 + 1440·l - 1024)) · x
+  + (36·(3·d·l^2 - 15·d·l + 23·d - 20·l^6 + 300·l^5 - 1940·l^4 + 6900·l^3 - 14168·l^2 + 15840·l - 7488))</div>
+        </section>
+
+        <footer>symbolicdet &mdash; symbolic determinant engine</footer>
+    </main>
+</div>
+<script>
+    function toggle(id) {
+    document.getElementById(id).classList.toggle('open');
+    document.getElementById('chevron_' + id).classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+    }
+    const first = document.querySelector('.group-body');
+    const firstChevron = document.querySelector('.chevron');
+    if (first) { first.classList.add('open'); firstChevron.classList.add('open'); }
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+});
+
+const VAR_CLASSES = {
+    'λ':      'math-lam',
+    'lambda': 'math-lam',
+    'x':      'math-x',
+    'l':      'math-l',
+    'd':      'math-d',
+};
+
+function classify(raw) {
+    const s = (raw || '').trim().toLowerCase();
+    return VAR_CLASSES[s] || VAR_CLASSES[raw.trim()] || null;
+}
+
+function colorizeVars() {
+    document.querySelectorAll('mjx-mi').forEach(el => {
+        const candidates = [
+            el.getAttribute('data-semantic-speech'),
+            el.getAttribute('title'),
+            el.textContent,
+        ];
+        for (const c of candidates) {
+            const cls = classify(c || '');
+            if (cls) { el.classList.add(cls); break; }
+        }
+    });
+}
+
+window.addEventListener('load', () => {
+    const run = () => {
+        colorizeVars();
+        new MutationObserver(colorizeVars)
+            .observe(document.body, { childList: true, subtree: true });
+    };
+    if (window.MathJax?.startup?.promise) {
+        MathJax.startup.promise.then(run);
+    } else {
+        setTimeout(run, 1500);
+    }
+});
+</script>
+</body>
+</html>

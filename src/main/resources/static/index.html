@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Symbolic Determinant Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+          --bg:        #0a0c0f;
+          --surface:   #111418;
+          --border:    #1e2530;
+          --border-hi: #2e3d52;
+          --accent:    #00d4ff;
+          --accent2:   #7b6cff;
+          --success:   #00e5a0;
+          --warn:      #ffb800;
+          --danger:    #ff4d6a;
+          --text:      #c8d8e8;
+          --muted:     #4a5a70;
+          --mono:      'IBM Plex Mono', monospace;
+          --sans:      'IBM Plex Sans', sans-serif;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          background: var(--bg);
+          color: var(--text);
+          font-family: var(--sans);
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+        body::before {
+          content: '';
+          position: fixed; inset: 0;
+          background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,.012) 2px, rgba(0,212,255,.012) 4px);
+          pointer-events: none; z-index: 9999;
+        }
+
+        header {
+          border-bottom: 1px solid var(--border);
+          padding: 18px 36px;
+          display: flex;
+          align-items: baseline;
+          gap: 14px;
+          position: sticky; top: 0;
+          background: rgba(10,12,15,.94);
+          backdrop-filter: blur(8px);
+          z-index: 100;
+        }
+        header h1 { font-family: var(--mono); font-size: .95rem; font-weight: 600; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+        .tag { font-family: var(--mono); font-size: .65rem; color: var(--muted); border: 1px solid var(--border); padding: 2px 8px; border-radius: 2px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-left: auto; box-shadow: 0 0 8px var(--success); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        main { flex: 1; display: grid; grid-template-columns: 360px 1fr; }
+
+        .panel { border-right: 1px solid var(--border); overflow-y: auto; padding: 28px 24px; display: flex; flex-direction: column; gap: 24px; }
+        .panel-label { font-family: var(--mono); font-size: .62rem; font-weight: 600; color: var(--muted); letter-spacing: .15em; text-transform: uppercase; margin-bottom: 10px; }
+
+        /* ── Size + predefined row ── */
+        .size-row { display: flex; gap: 5px; }
+        .size-btn { flex: 1; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--mono); font-size: .8rem; padding: 8px 0; cursor: pointer; transition: all .15s; border-radius: 2px; }
+        .size-btn:hover { border-color: var(--border-hi); color: var(--text); }
+        .size-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,.06); }
+
+        /* Predefined load button — appears below size row for 4 and 5 */
+        #predefined-bar {
+          display: none;
+          align-items: center;
+          gap: 10px;
+          margin-top: -14px; /* tuck under size row */
+          padding: 8px 12px;
+          border: 1px solid var(--warn);
+          border-radius: 2px;
+          background: rgba(255,184,0,.04);
+          animation: fadeIn .2s ease;
+        }
+        #predefined-bar.visible { display: flex; }
+        #predefined-bar span { font-family: var(--mono); font-size: .65rem; color: var(--warn); flex: 1; }
+        #btn-predefined {
+          background: transparent;
+          border: 1px solid var(--warn);
+          color: var(--warn);
+          font-family: var(--mono);
+          font-size: .68rem;
+          font-weight: 600;
+          letter-spacing: .08em;
+          padding: 5px 12px;
+          cursor: pointer;
+          border-radius: 2px;
+          transition: background .15s, box-shadow .15s;
+          white-space: nowrap;
+        }
+        #btn-predefined:hover { background: rgba(255,184,0,.08); box-shadow: 0 0 12px rgba(255,184,0,.15); }
+        #btn-predefined.loaded {
+          border-color: var(--success); color: var(--success);
+          background: rgba(0,229,160,.06);
+        }
+
+        /* Matrix grid */
+        #matrix-grid { display: grid; gap: 5px; }
+        .cell-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: .82rem; padding: 8px 8px; text-align: center; border-radius: 2px; transition: border-color .15s, box-shadow .15s; width: 100%; }
+        .cell-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,.1); }
+        .cell-input.has-symbol { color: var(--accent2); }
+        /* cells that were filled by predefined get a subtle tint */
+        .cell-input.predefined { border-color: rgba(255,184,0,.3); }
+
+        /* Numeric inputs */
+        #numeric-section { display: flex; flex-direction: column; gap: 8px; }
+        .base-row { display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 10px; }
+        .base-label { font-family: var(--mono); font-size: .78rem; color: var(--accent2); text-align: right; }
+        .base-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: .85rem; padding: 7px 10px; border-radius: 2px; transition: border-color .15s; width: 100%; }
+        .base-input:focus { outline: none; border-color: var(--accent2); }
+        .base-hint { font-family: var(--mono); font-size: .6rem; color: var(--muted); margin-top: 2px; padding-left: 90px; }
+
+        /* Options */
+        .opts { display: flex; gap: 12px; flex-wrap: wrap; }
+        .toggle-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: var(--mono); font-size: .72rem; color: var(--muted); user-select: none; transition: color .15s; }
+        .toggle-label:hover { color: var(--text); }
+        .toggle-label input[type=checkbox] { display: none; }
+        .toggle-box { width: 13px; height: 13px; border: 1px solid var(--border-hi); border-radius: 2px; position: relative; transition: border-color .15s; flex-shrink: 0; }
+        .toggle-label input:checked ~ .toggle-box { border-color: var(--accent); background: rgba(0,212,255,.12); }
+        .toggle-label input:checked ~ .toggle-box::after { content: ''; position: absolute; inset: 3px; background: var(--accent); border-radius: 1px; }
+
+        /* Buttons */
+        .action-btn {
+          width: 100%; padding: 13px;
+          background: transparent;
+          border: 1px solid var(--accent);
+          color: var(--accent);
+          font-family: var(--mono); font-size: .82rem; font-weight: 600;
+          letter-spacing: .1em; text-transform: uppercase;
+          cursor: pointer; position: relative; overflow: hidden;
+          transition: background .15s, box-shadow .15s; border-radius: 2px;
+        }
+        .action-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(0,212,255,.08), transparent); transform: translateX(-100%); transition: transform .4s; }
+        .action-btn:hover::before { transform: translateX(100%); }
+        .action-btn:hover { box-shadow: 0 0 20px rgba(0,212,255,.12); }
+        .action-btn:disabled { border-color: var(--muted); color: var(--muted); cursor: not-allowed; }
+        .action-btn.loading { color: transparent; }
+        .action-btn.loading::after { content: ''; position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+        .action-btn.secondary { border-color: var(--accent2); color: var(--accent2); }
+        .action-btn.secondary::before { background: linear-gradient(90deg, transparent, rgba(123,108,255,.08), transparent); }
+        .action-btn.secondary:hover { box-shadow: 0 0 20px rgba(123,108,255,.12); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Results */
+        #results-panel { padding: 28px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .result-block { border: 1px solid var(--border); border-radius: 3px; overflow: hidden; animation: fadeIn .3s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+        .result-block-header { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .result-block-header .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .result-block-header h3 { font-family: var(--mono); font-size: .65rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); flex: 1; }
+        .result-block-body { padding: 14px; }
+
+        .expr { font-family: var(--mono); font-size: .88rem; color: var(--text); line-height: 1.7; word-break: break-all; white-space: pre-wrap; }
+        .expr.highlight { color: var(--accent); }
+        .expr.purple { color: var(--accent2); }
+
+        .numeric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .numeric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 12px; }
+        .numeric-card .label { font-family: var(--mono); font-size: .6rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 5px; }
+        .numeric-card .value { font-family: var(--mono); font-size: 1.05rem; font-weight: 600; color: var(--success); }
+        .numeric-card .verdict { font-family: var(--mono); font-size: .62rem; margin-top: 4px; }
+        .verdict.ok { color: var(--success); }
+        .verdict.warn { color: var(--warn); }
+
+        .vars-table { width: 100%; border-collapse: collapse; }
+        .vars-table td { font-family: var(--mono); font-size: .75rem; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+        .vars-table td:first-child { color: var(--accent2); width: 120px; }
+
+        .steps-list { font-family: var(--mono); font-size: .72rem; color: var(--muted); line-height: 1.9; max-height: 280px; overflow-y: auto; }
+        .steps-list .step-line:hover { color: var(--text); }
+
+        .error-block { border: 1px solid var(--danger); border-radius: 3px; padding: 14px; font-family: var(--mono); font-size: .82rem; color: var(--danger); animation: fadeIn .3s ease; }
+
+        #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--muted); }
+        #empty-state .big { font-size: 2.5rem; opacity: .12; }
+        #empty-state p { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; }
+
+        #numeric-wrap { transition: opacity .2s; }
+        #numeric-wrap.hidden { display: none; }
+
+        @media (max-width: 860px) {
+          main { grid-template-columns: 1fr; }
+          .panel { border-right: none; border-bottom: 1px solid var(--border); }
+          #results-panel { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⬡ Symbolic Det</h1>
+    <span class="tag">LU Engine</span>
+    <div class="status-dot" title="Server online"></div>
+</header>
+
+<main>
+    <aside class="panel">
+
+        <section>
+            <div class="panel-label">Matrix Size n×n</div>
+            <div class="size-row" id="size-row"></div>
+
+            <!-- Predefined bar — only visible for n=4 and n=5 -->
+            <div id="predefined-bar">
+                <span id="predefined-label">Predefined test matrix available</span>
+                <button id="btn-predefined" onclick="loadPredefined()">⊞ Load Predefined</button>
+            </div>
+        </section>
+
+        <section>
+            <div class="panel-label">
+                Matrix Elements
+                <span style="color:var(--accent2);font-size:.58rem;margin-left:6px">numbers or expressions (x_l, t_l, lambda…)</span>
+            </div>
+            <div id="matrix-grid"></div>
+        </section>
+
+        <section id="numeric-wrap" class="hidden">
+            <div class="panel-label">
+                Numeric Evaluation
+                <span style="color:var(--muted);font-size:.58rem;margin-left:6px">base values → all x_l±n, t_l±n derived automatically</span>
+            </div>
+            <div id="numeric-section">
+                <div class="base-row">
+                    <span class="base-label">x =</span>
+                    <input class="base-input" type="number" step="any" id="inp-x" placeholder="base x value"/>
+                </div>
+                <div class="base-hint">derives x_l, x_l±1, x_l±2 … via x - 2(l-1)l</div>
+
+                <div class="base-row" style="margin-top:6px">
+                    <span class="base-label">l =</span>
+                    <input class="base-input" type="number" step="any" id="inp-l" placeholder="index l"/>
+                </div>
+
+                <div class="base-row" id="row-d" style="margin-top:6px;display:none">
+                    <span class="base-label">d =</span>
+                    <input class="base-input" type="number" step="any" id="inp-d" placeholder="parameter d"/>
+                </div>
+
+                <div class="base-row" id="row-lambda" style="margin-top:6px;display:none">
+                    <span class="base-label">λ =</span>
+                    <input class="base-input" type="number" step="any" id="inp-lambda" placeholder="eigenvalue λ"/>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="panel-label">Options</div>
+            <div class="opts">
+                <label class="toggle-label">
+                    <input type="checkbox" id="opt-factorize"/>
+                    <span class="toggle-box"></span>
+                    Factorize
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="opt-detailed"/>
+                    <span class="toggle-box"></span>
+                    LU Steps
+                </label>
+            </div>
+        </section>
+
+        <button class="action-btn" id="btn-compute" onclick="computeSymbolic()">
+            ▶ Compute Determinant
+        </button>
+
+    </aside>
+
+    <section id="results-panel">
+        <div id="empty-state">
+            <div class="big">∇</div>
+            <p>Enter a matrix and press Compute</p>
+        </div>
+    </section>
+</main>
+
+<script>
+    // ── Predefined matrices — exact strings from PredefinedMatrices.java ────────
+    const PREDEFINED = {
+      4: [
+        ["6*(x_l-2)+3*(x_l+1) - lambda", "3*t_l",  "0",  "-1*(t_l-2)*(t_l-1)*t_l"],
+        ["-3", "6*(x_l-2)-2*(x_l) - lambda", "t_l-1", "(t_l-2)*(t_l-1)*(x_l+1)"],
+        ["0",  "-5", "6*(x_l-2)-5*(x_l-1) - lambda", "-1*(t_l-2)*((x_l)*(x_l+1)+(d/3))"],
+        ["0",  "0",  "-6", "(x_l-1)*x_l*(x_l+1)+((x_l-1)+(x_l+1))*(d/2) - lambda"]
+      ],
+      5: [
+        ["10*(x_l-3) + 6*(x_l+1) - lambda", "6*t_l", "0", "0", "(t_l-3)*(t_l-2)*(t_l-1)*t_l"],
+        ["-4", "10*(x_l-3) - 1*(x_l) - lambda", "3*(t_l-1)", "0", "-1*(t_l-3)*(t_l-2)*(t_l-1)*(x_l+1)"],
+        ["0",  "-7", "10*(x_l-3) - 6*(x_l-1) - lambda", "t_l-2", "(t_l-3)*(t_l-2)*((x_l)*(x_l+1)+(d/3))"],
+        ["0",  "0",  "-9", "10*(x_l-3) - 9*(x_l-2) - lambda", "-1*(t_l-3)*((x_l-1)*x_l*(x_l+1)+((x_l-1)+(x_l+1))*(d/2))"],
+        ["0",  "0",  "0",  "-10", "(x_l-2)*(x_l-1)*x_l*(x_l+1)+(((5*(x_l+1))+(3*(x_l-3)))*((x_l-2)+x_l)+(6*(x_l-1)*x_l)-2*(x_l-3)*(x_l-2)+2*d)*(d/10) - lambda"]
+      ]
+    };
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let currentN = 2;
+    let lastResponse = null;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    (function init() {
+      const row = document.getElementById('size-row');
+      [1,2,3,4,5,6].forEach(n => {
+        const btn = document.createElement('button');
+        btn.className = 'size-btn' + (n === currentN ? ' active' : '');
+        btn.textContent = n;
+        btn.onclick = () => setSize(n);
+        row.appendChild(btn);
+      });
+      buildGrid(currentN);
+    })();
+
+    function setSize(n) {
+      currentN = n;
+      document.querySelectorAll('.size-btn').forEach((b,i) => b.classList.toggle('active', i+1===n));
+      buildGrid(n);
+      resetNumericSection();
+      updatePredefinedBar(n);
+    }
+
+    function updatePredefinedBar(n) {
+      const bar = document.getElementById('predefined-bar');
+      const btn = document.getElementById('btn-predefined');
+      if (PREDEFINED[n]) {
+        bar.classList.add('visible');
+        btn.classList.remove('loaded');
+        btn.textContent = '⊞ Load Predefined';
+        document.getElementById('predefined-label').textContent =
+          `Predefined ${n}×${n} test matrix available`;
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+
+    function buildGrid(n) {
+      const grid = document.getElementById('matrix-grid');
+      grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      grid.innerHTML = '';
+      for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++) {
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'cell-input';
+          inp.placeholder = `${i+1},${j+1}`;
+          inp.addEventListener('input', e => {
+            e.target.classList.toggle('has-symbol', /[a-zA-Z_]/.test(e.target.value));
+            e.target.classList.remove('predefined');
+            resetNumericSection();
+            // Un-mark button as loaded if user edits a cell manually
+            const btn = document.getElementById('btn-predefined');
+            if (btn) { btn.classList.remove('loaded'); btn.textContent = '⊞ Load Predefined'; }
+          });
+          grid.appendChild(inp);
+        }
+    }
+
+    // ── Load predefined matrix into the grid ──────────────────────────────────
+    function loadPredefined() {
+      const data = PREDEFINED[currentN];
+      if (!data) return;
+
+      const cells = [...document.querySelectorAll('.cell-input')];
+      for (let i = 0; i < currentN; i++) {
+        for (let j = 0; j < currentN; j++) {
+          const cell = cells[i * currentN + j];
+          cell.value = data[i][j];
+          cell.classList.toggle('has-symbol', /[a-zA-Z_]/.test(data[i][j]));
+          cell.classList.add('predefined');
+        }
+      }
+
+      resetNumericSection();
+
+      // Mark button as loaded
+      const btn = document.getElementById('btn-predefined');
+      btn.classList.add('loaded');
+      btn.textContent = '✓ Loaded';
+    }
+
+    function resetNumericSection() {
+      lastResponse = null;
+      document.getElementById('numeric-wrap').classList.add('hidden');
+      const numBtn = document.getElementById('btn-numeric');
+      if (numBtn) numBtn.remove();
+    }
+
+    // ── Phase 1: symbolic ─────────────────────────────────────────────────────
+    async function computeSymbolic() {
+      const matrix = readMatrix();
+      if (!matrix) return;
+
+      const btn = document.getElementById('btn-compute');
+      btn.disabled = true; btn.classList.add('loading');
+
+      const payload = {
+        matrix,
+        factorize: document.getElementById('opt-factorize').checked,
+        detailedLU: document.getElementById('opt-detailed').checked,
+      };
+
+      try {
+        const res  = await fetch('/api/determinant', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json();
+
+        if (!res.ok || (data.error && !data.symbolicDeterminant)) {
+          showError(data.error || `HTTP ${res.status}`); return;
+        }
+
+        lastResponse = data;
+        renderResults(data);
+        if (data.detectedVariables && data.detectedVariables.length > 0) showNumericSection(data);
+
+      } catch (err) {
+        showError('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.classList.remove('loading');
+      }
+    }
+
+    // ── Phase 2: numeric ──────────────────────────────────────────────────────
+    async function computeNumeric() {
+      const matrix = readMatrix();
+      if (!matrix) return;
+
+      const xVal = parseFloat(document.getElementById('inp-x').value);
+      const lVal = parseFloat(document.getElementById('inp-l').value);
+      if (isNaN(xVal) || isNaN(lVal)) { alert('x and l are required for numeric evaluation.'); return; }
+
+      const dRow      = document.getElementById('row-d');
+      const lambdaRow = document.getElementById('row-lambda');
+
+      const payload = {
+        matrix,
+        xValue:      xVal,
+        lValue:      lVal,
+        dValue:      dRow.style.display === 'none'      ? null : (parseFloat(document.getElementById('inp-d').value) || 0),
+        lambdaValue: lambdaRow.style.display === 'none' ? null : (parseFloat(document.getElementById('inp-lambda').value) || 0),
+        factorize: document.getElementById('opt-factorize').checked,
+        detailedLU: document.getElementById('opt-detailed').checked,
+      };
+
+      const btn = document.getElementById('btn-numeric');
+      btn.disabled = true; btn.classList.add('loading');
+
+      try {
+        const res  = await fetch('/api/determinant', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json();
+        renderResults(data);
+        if (data.error) addErrorBlock(data.error);
+      } catch (err) {
+        showError('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.classList.remove('loading');
+      }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function readMatrix() {
+      const cells = [...document.querySelectorAll('.cell-input')];
+      const matrix = [];
+      for (let i = 0; i < currentN; i++) {
+        matrix.push([]);
+        for (let j = 0; j < currentN; j++) {
+          const v = cells[i * currentN + j].value.trim();
+          if (!v) { showError(`Cell [${i+1},${j+1}] is empty.`); return null; }
+          matrix[i].push(v);
+        }
+      }
+      return matrix;
+    }
+
+    function showNumericSection(data) {
+      const wrap = document.getElementById('numeric-wrap');
+      wrap.classList.remove('hidden');
+      document.getElementById('row-d').style.display      = data.needsD      ? '' : 'none';
+      document.getElementById('row-lambda').style.display = data.needsLambda ? '' : 'none';
+      if (!document.getElementById('btn-numeric')) {
+        const btn = document.createElement('button');
+        btn.className = 'action-btn secondary';
+        btn.id = 'btn-numeric';
+        btn.textContent = '⟳ Evaluate Numerically';
+        btn.onclick = computeNumeric;
+        wrap.appendChild(btn);
+      }
+    }
+
+    function renderResults(data) {
+      const panel = document.getElementById('results-panel');
+      panel.innerHTML = '';
+
+      if (data.symbolicDeterminant)
+        panel.appendChild(block('#00d4ff', 'Symbolic LU Determinant',
+          `<div class="expr highlight">${escHtml(data.symbolicDeterminant)}</div>`));
+
+      if (data.expandedPolynomial)
+        panel.appendChild(block('#7b6cff', 'Expanded Polynomial',
+          `<div class="expr purple">${escHtml(data.expandedPolynomial)}</div>`));
+
+      if (data.factorized)
+        panel.appendChild(block('#ffb800', 'Factorized Form',
+          `<div class="expr" style="color:var(--warn)">${escHtml(data.factorized)}</div>`));
+
+      if (data.numericFromSymbolic != null || data.numericFromLU != null) {
+        const sym = data.numericFromSymbolic, lu = data.numericFromLU;
+        const match = sym != null && lu != null && Math.abs(sym - lu) < 1e-4;
+        panel.appendChild(block('#00e5a0', 'Numeric Results', `
+          <div class="numeric-grid">
+            ${sym != null ? `<div class="numeric-card">
+              <div class="label">Symbolic Substitution</div>
+              <div class="value">${sym.toFixed(8)}</div>
+            </div>` : ''}
+            ${lu != null ? `<div class="numeric-card">
+              <div class="label">Numeric LU</div>
+              <div class="value">${lu.toFixed(8)}</div>
+              ${sym != null ? `<div class="verdict ${match?'ok':'warn'}">${match ? '✓ matches symbolic' : '⚠ differs from symbolic'}</div>` : ''}
+            </div>` : ''}
+          </div>`));
+      }
+
+      if (data.detectedVariables && data.detectedVariables.length) {
+        const rows = data.detectedVariables
+          .map(v => `<tr><td>${escHtml(v)}</td><td style="color:var(--muted);font-size:.65rem">derived from x, l</td></tr>`)
+          .join('');
+        panel.appendChild(block('#2e3d52', `Detected Variables (${data.detectedVariables.length})`,
+          `<table class="vars-table">${rows}</table>`));
+      }
+
+      if (data.luSteps && data.luSteps.length) {
+        const lines = data.luSteps.map(l => `<div class="step-line">${escHtml(l)}</div>`).join('');
+        panel.appendChild(block('#4a5a70', `LU Steps (${data.luSteps.length})`,
+          `<div class="steps-list">${lines}</div>`));
+      }
+    }
+
+    function addErrorBlock(msg) {
+      document.getElementById('results-panel').insertAdjacentHTML('beforeend',
+        `<div class="error-block">⚠ ${escHtml(msg)}</div>`);
+    }
+    function showError(msg) {
+      document.getElementById('results-panel').innerHTML = `<div class="error-block">⚠ ${escHtml(msg)}</div>`;
+    }
+    function block(color, title, bodyHtml) {
+      const el = document.createElement('div');
+      el.className = 'result-block';
+      el.innerHTML = `
+        <div class="result-block-header">
+          <span class="dot" style="background:${color};box-shadow:0 0 6px ${color}40"></span>
+          <h3>${title}</h3>
+        </div>
+        <div class="result-block-body">${bodyHtml}</div>`;
+      return el;
+    }
+    function escHtml(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') computeSymbolic();
+    });
+</script>
+</body>
+</html>
