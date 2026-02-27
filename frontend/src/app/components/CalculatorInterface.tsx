@@ -54,6 +54,8 @@ function extractNumericVariables(expr: string): string[] {
   return Array.from(found);
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
 const PROGRESS_STAGES = [
   { threshold: 20, label: "Parsing matrix structure...", duration: 300 },
   { threshold: 45, label: "Expanding symbolic expression...", duration: 400 },
@@ -261,7 +263,7 @@ export function CalculatorInterface() {
     const payload: any = { matrix: matrixValues, factorize: factorizeOption, detailedLU: detailedLUOption };
 
     try {
-      const res = await fetch("http://localhost:8080/api/determinant", {
+      const res = await fetch(`${API_BASE}/api/determinant`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -298,7 +300,7 @@ export function CalculatorInterface() {
     if (detectedVars.includes("d")) payload.dValue = Number(numericInputs.d);
     if (detectedVars.includes("lambda")) payload.lambdaValue = Number(numericInputs.lambda);
     try {
-      const res = await fetch("http://localhost:8080/api/determinant", {
+      const res = await fetch(`${API_BASE}/api/determinant`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
