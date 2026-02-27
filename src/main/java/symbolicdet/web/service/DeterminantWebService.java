@@ -96,13 +96,10 @@ public class DeterminantWebService {
         }
 
         if (req.isFactorize()) {
-            System.out.println("U determinantwebservice u if dijelu prije faktorizacije");
             List<FactorizedGroup> factorized =
                     FactorizeFinalExpression.factor(expandedPoly, n);
             response.setFactorized(factorized);
         }
-
-        System.out.println("U determinantwebservice poslije if dijela poslije faktorizacije");
 
         if (req.hasNumericInputs()) {
             try {
