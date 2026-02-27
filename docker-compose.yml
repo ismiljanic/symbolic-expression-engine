@@ -1,3 +1,5 @@
+# Obsolete currently - using one merged Dockerfile in root project instead
+# Everything is merged
 services:
   backend:
     build:
