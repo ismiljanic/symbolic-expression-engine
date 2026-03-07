@@ -75,16 +75,15 @@ public class PythonBridge {
     // -----------------------------------------------------------------------
 
     private static String runPython(String script, String poly, String... extraArgs) throws IOException {
-        // 1. Create a temp file
         File tempFile = File.createTempFile("expr", ".txt");
         tempFile.deleteOnExit();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
-            writer.write(poly);
+            writer.write(poly);   // write the full polynomial
         }
 
-        // 2. Build command
+// Command now passes ONLY the file path
         List<String> cmd = new ArrayList<>();
-        cmd.add(PYTHON);  // python or python3
+        cmd.add(PYTHON);
         cmd.add(script);
         cmd.add(tempFile.getAbsolutePath());
         cmd.addAll(Arrays.asList(extraArgs));

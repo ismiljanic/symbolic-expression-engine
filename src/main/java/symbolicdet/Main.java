@@ -8,7 +8,6 @@ import symbolicdet.utils.SymbolicTracer;
 
 import java.io.IOException;
 import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.*;
 
 import static symbolicdet.cli.NumericInputs.askInt;
@@ -20,7 +19,6 @@ import static symbolicdet.utils.ExtractVariablesFromMatrix.collectVars;
 
 public class Main {
 
-    static final MathContext MC = new MathContext(50, RoundingMode.HALF_UP);
     static Map<String, Double> persistentVars = new HashMap<>();
     static Matrix currentReduced = null;
 
