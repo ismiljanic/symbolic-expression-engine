@@ -1,0 +1,7 @@
+python -m venv venv
+
+.\venv\Scripts\activate.bat
+
+pip install -r requirements.txt
+
+Ako bude problema s outputom probaj: chcp 65001 da se terminal stavi na utf-8

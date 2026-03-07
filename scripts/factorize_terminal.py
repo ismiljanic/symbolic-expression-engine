@@ -137,9 +137,6 @@ def sort_keys(keys):
 # Main
 # ---------------------------------------------------------------------------
 
-expr = eval(sys.argv[1])
-
-outer_key = sys.argv[2].strip().lower() if len(sys.argv) > 2 else "d"
 if outer_key not in ALL_SYMS:
     print(f"Unknown variable '{outer_key}'. Choose from: x, l, d, lam")
     sys.exit(1)
