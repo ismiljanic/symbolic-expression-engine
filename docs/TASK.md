@@ -41,6 +41,8 @@ det | x_l    -t_l | = x_l * x_(l+1) - t_l = d
 
 This identity is the algebraic foundation from which all matrix entries are derived.
 
+Additionally, newest matrix construction should follow tridiagonal approach like the following: 
+<img src="matrix.png" alt="matrix" width="100%">
 ---
 
 ## 3. Functional Requirements
