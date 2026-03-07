@@ -17,6 +17,9 @@ public class DeterminantResponse {
     private boolean needsD;
     private boolean needsLambda;
 
+    // e.g. symbolicMatrix[i][j] = "(((10 * x_l-3) + (6 * x_l+1)) - lambda)"
+    private String[][] symbolicMatrix;
+
     public static DeterminantResponse error(String message) {
         DeterminantResponse r = new DeterminantResponse();
         r.error = message;
@@ -56,9 +59,9 @@ public class DeterminantResponse {
     public boolean isNeedsLambda() { return needsLambda; }
     public void setNeedsLambda(boolean v) { this.needsLambda = v; }
 
-    /**
-     * Inner class to represent a group of factorized terms
-     */
+    public String[][] getSymbolicMatrix() { return symbolicMatrix; }
+    public void setSymbolicMatrix(String[][] v) { this.symbolicMatrix = v; }
+
     public static class FactorizedGroup {
         private String power;
         private List<String> terms;
@@ -75,6 +78,7 @@ public class DeterminantResponse {
 
         public List<String> getTerms() { return terms; }
         public void setTerms(List<String> v) { this.terms = v; }
+
         @Override
         public String toString() {
             return "FactorizedGroup{factor='" + power + "', terms=" + terms + "}";
