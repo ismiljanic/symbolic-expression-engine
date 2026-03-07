@@ -17,7 +17,7 @@ public class PostfixPolynomialEvaluator {
 
         for (String token : postfixTokens) {
             if (token.matches("\\d+\\.\\d+|\\d+")) {
-                double numericValue = Double.parseDouble(token);
+                BigDecimal numericValue = new BigDecimal(token);
                 evaluationStack.push(
                         Collections.singletonList(new PolyTerm(numericValue, 0, 0, 0, 0))
                 );
