@@ -24,10 +24,10 @@ public class SimplifySymbolic {
         // Expand nested (l+n)-1 and (l-n)-1 patterns generally
         expression = expression.replaceAll("\\(l\\+([0-9]+)\\)-1", "(l+$1-1)");
         expression = expression.replaceAll("\\(l-([0-9]+)\\)-1", "(l-$1-1)");
-
-        // Simplify *1, 1*, etc.
-        expression = expression.replaceAll("\\*1(?!\\d)", "");
-        expression = expression.replaceAll("1\\*", "");
+//
+//        // Simplify *1, 1*, etc. -> BUGGED AF strips 11 to 1
+//        expression = expression.replaceAll("\\*1(?!\\d)", "");
+//        expression = expression.replaceAll("1\\*", "");
 
         // Simplify double negatives
         expression = expression.replaceAll("--", "+");
