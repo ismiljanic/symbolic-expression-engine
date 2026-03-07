@@ -1,6 +1,9 @@
 package symbolicdet.utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class PythonRunner {
 
@@ -8,15 +11,25 @@ public class PythonRunner {
             .toLowerCase().contains("win") ? "python" : "python3";
 
     /**
-     * Executes a Python script file with a single string argument.
-     *
-     * @param scriptPath absolute or relative path to the .py file
-     * @param argument   the argument passed as sys.argv[1] (will be shell-quoted)
-     * @return stdout of the script, trimmed
+     * Executes a Python script with a single string argument.
      */
     public static String run(String scriptPath, String argument) {
+        return run(scriptPath, argument, new String[0]);
+    }
+
+    /**
+     * Executes a Python script with a primary argument plus any number of
+     * additional arguments (e.g. the outer variable choice for factorization).
+     */
+    public static String run(String scriptPath, String argument, String... extraArgs) {
         try {
-            Process process = new ProcessBuilder(PYTHON, scriptPath, argument)
+            List<String> cmd = new ArrayList<>();
+            cmd.add(PYTHON);
+            cmd.add(scriptPath);
+            cmd.add(argument);
+            cmd.addAll(Arrays.asList(extraArgs));
+
+            Process process = new ProcessBuilder(cmd)
                     .redirectErrorStream(true)
                     .start();
             String output = new String(process.getInputStream().readAllBytes());

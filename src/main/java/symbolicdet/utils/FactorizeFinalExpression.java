@@ -3,21 +3,107 @@ package symbolicdet.utils;
 import symbolicdet.web.dto.DeterminantResponse.FactorizedGroup;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class FactorizeFinalExpression {
 
     private static final String TERMINAL_SCRIPT = "scripts/factorize_terminal.py";
     private static final String LATEX_SCRIPT = "scripts/factorize_latex.py";
 
+    /**
+     * Valid outer variable choices passed to the Python scripts.
+     * "lambda" is normalised to "lam" for SymPy.
+     */
+    private static final Map<String, String> VAR_CHOICES = new LinkedHashMap<>();
+
+    static {
+        VAR_CHOICES.put("1", "d");
+        VAR_CHOICES.put("2", "x");
+        VAR_CHOICES.put("3", "l");
+        VAR_CHOICES.put("4", "lam");
+    }
+
+    /**
+     * Prompts the user to choose which variable to factor out (outer grouping),
+     * then runs both terminal and LaTeX factorization scripts with that choice.
+     */
+// In FactorizeFinalExpression.java
     public static List<FactorizedGroup> factor(String polynomial, int n) {
+        String outerVar = promptVarChoice();
         String sympyExpr = ExpressionConverter.toSympyNotation(polynomial);
 
-        String rawTerminal = PythonRunner.run(TERMINAL_SCRIPT, sympyExpr);
-        String latexJson = PythonRunner.run(LATEX_SCRIPT, sympyExpr);
+        // Run both scripts concurrently
+        ExecutorService exec = Executors.newFixedThreadPool(2);
+        Future<String> terminalFuture = exec.submit(() ->
+                PythonRunner.run(TERMINAL_SCRIPT, sympyExpr, outerVar));
+        Future<String> latexFuture = exec.submit(() ->
+                PythonRunner.run(LATEX_SCRIPT, sympyExpr, outerVar));
+
+        try {
+            String rawTerminal = terminalFuture.get();
+            String latexJson = latexFuture.get();
+            exec.shutdown();
+
+            String terminalOutput = ExpressionConverter.toMathNotation(rawTerminal);
+            System.out.println(terminalOutput);
+            HtmlReportWriter.write(terminalOutput, latexJson, polynomial, "determinant", n, n);
+            return parseFactorizedOutput(terminalOutput);
+        } catch (Exception e) {
+            exec.shutdown();
+            throw new RuntimeException("Factorization failed", e);
+        }
+    }
+
+    /**
+     * Same as factor() but returns the terminal string for backward compatibility.
+     */
+    public static String factorAsString(String polynomial, int n) {
+        String outerVar = promptVarChoice();
+        String sympyExpr = ExpressionConverter.toSympyNotation(polynomial);
+
+        String rawTerminal = PythonRunner.run(TERMINAL_SCRIPT, sympyExpr, outerVar);
+        String latexJson = PythonRunner.run(LATEX_SCRIPT, sympyExpr, outerVar);
+
         String terminalOutput = ExpressionConverter.toMathNotation(rawTerminal);
-        System.out.println(terminalOutput);
         HtmlReportWriter.write(terminalOutput, latexJson, polynomial, "determinant", n, n);
-        return parseFactorizedOutput(terminalOutput);
+        return terminalOutput;
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Prints a menu and reads the user's choice from stdin.
+     * Keeps asking until a valid option is entered.
+     */
+    private static String promptVarChoice() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("\nSTEP 4 — Polynomial grouping / factorization");
+        System.out.println("Choose the outer variable used to group polynomial terms.");
+        System.out.println("This does NOT change the determinant value, only its algebraic presentation.\n");
+
+        System.out.println("Available grouping variables:");
+        System.out.println("  1) d   — constant interaction parameter");
+        System.out.println("  2) x   — base variable");
+        System.out.println("  3) l   — index parameter");
+        System.out.println("  4) λ   — eigenvalue variable");
+        System.out.print("\nSelect grouping variable [1–4]: ");
+
+        while (true) {
+            String input = sc.nextLine().trim();
+            if (VAR_CHOICES.containsKey(input)) {
+                return VAR_CHOICES.get(input);
+            }
+            // Also accept typing the name directly
+            String lower = input.toLowerCase();
+            if (lower.equals("lambda")) lower = "lam";
+            if (VAR_CHOICES.containsValue(lower)) return lower;
+
+            System.out.print("Invalid choice. Enter 1, 2, 3 or 4: ");
+        }
     }
 
     private static List<FactorizedGroup> parseFactorizedOutput(String output) {
@@ -31,23 +117,19 @@ public class FactorizeFinalExpression {
             if (line.isEmpty() || line.equals("det =")) continue;
 
             String factor = "1";
-            String inner = line;  // By default, inner = whole term
+            String inner = line;
 
-            // Detect lambda factor
             int lambdaIdx = line.indexOf("λ");
             if (lambdaIdx >= 0) {
-                // Find the full lambda factor (e.g., λ^3)
                 int endIdx = lambdaIdx + 1;
-                while (endIdx < line.length() && (Character.isDigit(line.charAt(endIdx)) || line.charAt(endIdx) == '^')) {
+                while (endIdx < line.length() &&
+                        (Character.isDigit(line.charAt(endIdx)) || line.charAt(endIdx) == '^')) {
                     endIdx++;
                 }
                 factor = line.substring(lambdaIdx, endIdx).trim();
-
-                // Inner = full term (factor stays included)
                 inner = line.trim();
             }
 
-            // Remove leading '+'
             if (inner.startsWith("+")) inner = inner.substring(1).trim();
             if (factor.startsWith("+")) factor = factor.substring(1).trim();
 
@@ -59,29 +141,5 @@ public class FactorizeFinalExpression {
         }
 
         return groups;
-    }
-
-    private static String cleanTermLine(String line) {
-        line = line.replaceAll("^[+\\-]\\s*", "").trim();
-        if (line.toLowerCase().startsWith("or ")) {
-            return "";
-        }
-        return line;
-    }
-
-    /**
-     * Alternative version that keeps the original String return type for backward compatibility.
-     */
-    public static String factorAsString(String polynomial, int n) {
-        String sympyExpr = ExpressionConverter.toSympyNotation(polynomial);
-
-        String rawTerminal = PythonRunner.run(TERMINAL_SCRIPT, sympyExpr);
-        String latexJson = PythonRunner.run(LATEX_SCRIPT, sympyExpr);
-
-        String terminalOutput = ExpressionConverter.toMathNotation(rawTerminal);
-
-        HtmlReportWriter.write(terminalOutput, latexJson, polynomial, "determinant", n, n);
-
-        return terminalOutput;
     }
 }
