@@ -12,6 +12,10 @@ public class DeterminantRequest {
     private boolean factorize = false;
     private boolean detailedLU = false;
 
+    private String factorizeVar = "d";
+
+    private boolean useTridiagonal = false;
+    private Integer tridiagonalSize;
 
     public String[][] getMatrix() { return matrix; }
     public void setMatrix(String[][] matrix) { this.matrix = matrix; }
@@ -33,6 +37,15 @@ public class DeterminantRequest {
 
     public boolean isDetailedLU() { return detailedLU; }
     public void setDetailedLU(boolean detailedLU) { this.detailedLU = detailedLU; }
+
+    public String getFactorizeVar() { return factorizeVar != null ? factorizeVar : "d"; }
+    public void setFactorizeVar(String factorizeVar) { this.factorizeVar = factorizeVar; }
+
+    public boolean isUseTridiagonal() { return useTridiagonal; }
+    public void setUseTridiagonal(boolean useTridiagonal) { this.useTridiagonal = useTridiagonal; }
+
+    public Integer getTridiagonalSize() { return tridiagonalSize; }
+    public void setTridiagonalSize(Integer tridiagonalSize) { this.tridiagonalSize = tridiagonalSize; }
 
     public boolean hasNumericInputs() {
         return xValue != null && lValue != null;

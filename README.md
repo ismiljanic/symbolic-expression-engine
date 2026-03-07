@@ -59,8 +59,14 @@ All matrix entries are symbolic expressions in `x_l`, `t_l` and integer coeffici
 ```
 .
 ├── docs
-    ├── TASK.md/
+    ├── matrix.png
+    ├── TASK.md
 ├── frontend
+├── report
+├── scripts
+    ├── evaluate_numeric.py
+    ├── factorize_latex.py
+    ├── factorize_terminal.py
 ├── src
     ├── main/
         ├── java/
@@ -70,6 +76,8 @@ All matrix entries are symbolic expressions in `x_l`, `t_l` and integer coeffici
                 │   └── NumericInputs.java
                 │   └── YesNoPrompt.java
                 ├── matrix/
+                │   ├── utils/
+                │       ├── matrix.png
                 │   ├── DeterminantService.java
                 │   ├── Matrix.java
                 │   ├── PredefinedMatrices.java
@@ -101,25 +109,29 @@ All matrix entries are symbolic expressions in `x_l`, `t_l` and integer coeffici
                 │       ├── CheckIfNumeric.java
                 │       ├── ComputeOffset.java
                 │       ├── ExpandSymbolic.java
+                │       ├── ExpressionConverter.java
                 │       ├── ExtractVariablesFromMatrix.java
+                │       ├── FactorizeFinalExpression.java
+                │       ├── HtmlReportWriter.java
                 │       ├── PopulateRemainingVariables.java
                 │       ├── PopulateTLVaribales.java
                 │       ├── PopulateXLVaribales.java
                 │       ├── PrintNumericMatrix.java
                 │       ├── PrintSymbolicMatrix.java
+                │       ├── PythonBridge.java
+                │       ├── PythonRunner.java
                 │       ├── SymbolicTracer.java
                 │       ├── TraceNumericDeterminant.java
                 └── web/
+                │       ├── config/
                 │       ├── controller/
-                │           ├── DeterminantController.java
                 │       ├── dto
-                │           ├── DeterminantRequest.java
-                │           ├── DeterminantResponse.java
                 │       ├── service
-                │           ├── DeterminantWebService.java
                 │       ├── WebApplication.java
                 ├── Main.java
     ├── .gitignore
+    ├── .docker-compose.yml
+    ├── Dockerfile
     ├── LICENSE
     ├── pom.xml
     ├── README.md
