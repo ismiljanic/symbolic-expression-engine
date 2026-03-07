@@ -109,7 +109,7 @@ function extractNumericVariables(expr: string): string[] {
   return Array.from(found);
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
 const PROGRESS_STAGES = [
   { threshold: 20, label: "Parsing matrix...", duration: 300 },

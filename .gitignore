@@ -20,3 +20,4 @@ buildNumber.properties
 out
 det55
 write.txt
+venv/

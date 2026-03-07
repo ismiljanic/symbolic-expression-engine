@@ -15,11 +15,17 @@ def main():
         print("Usage: evaluate_numeric.py <expr> <x> <l> <d> <lam>", file=sys.stderr)
         sys.exit(1)
 
-    raw_expr = sys.argv[1]
-    x_val    = Decimal(sys.argv[2])
-    l_val    = Decimal(sys.argv[3])
-    d_val    = Decimal(sys.argv[4])
-    lam_val  = Decimal(sys.argv[5])
+    # Read expression from file if needed
+    if sys.argv[1].endswith(".txt"):
+        with open(sys.argv[1]) as f:
+            raw_expr = f.read()
+    else:
+        raw_expr = sys.argv[1]
+
+    x_val   = Decimal(sys.argv[2])
+    l_val   = Decimal(sys.argv[3])
+    d_val   = Decimal(sys.argv[4])
+    lam_val = Decimal(sys.argv[5])
 
     # Replace variable names with Decimal values
     # We do this by defining them in a local namespace

@@ -6,10 +6,27 @@ Usage: python3 factorize_terminal.py "<sympy_expr>" <outer_var>
 Grouping: outer_var desc -> middle desc -> inner desc -> remainder factored over l.
 Uses FLINT for fast factorization if available, falls back to SymPy.
 """
-import sys
+import sys, io
 from sympy import *
 
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')  # ensures λ prints
+
+# define symbols first
 x, l, d, lam = symbols('x l d lam')
+symbol_dict = {'x': x, 'l': l, 'd': d, 'lam': lam, 'lambda': lam}
+
+# Read expression from file if first argument is a .txt file
+if len(sys.argv) > 1 and sys.argv[1].endswith(".txt"):
+    with open(sys.argv[1]) as f:
+        expr_str = f.read()
+else:
+    expr_str = sys.argv[1]
+
+# Evaluate using the symbol dictionary
+expr = eval(expr_str, symbol_dict)
+
+# outer variable
+outer_key = sys.argv[2].strip().lower() if len(sys.argv) > 2 else "d"
 
 ALL_SYMS        = {"x": x, "l": l, "d": d, "lam": lam, "lambda": lam}
 SYM_NAMES       = {x: "x", l: "l", d: "d", lam: "λ"}
@@ -120,9 +137,6 @@ def sort_keys(keys):
 # Main
 # ---------------------------------------------------------------------------
 
-expr = eval(sys.argv[1])
-
-outer_key = sys.argv[2].strip().lower() if len(sys.argv) > 2 else "d"
 if outer_key not in ALL_SYMS:
     print(f"Unknown variable '{outer_key}'. Choose from: x, l, d, lam")
     sys.exit(1)
