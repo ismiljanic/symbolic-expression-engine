@@ -1,0 +1,13 @@
+Latest image build:
+docker build -t symbolic-expression-engine:latest .
+
+Create container:
+docker run -d -p 8080:8080 --name symbolic-expression-engine symbolic-expression-engine:latest
+
+If container is already created run it:
+docker start symbolic-expression-engine
+
+Check:
+docker ps
+CONTAINER ID   IMAGE          COMMAND               CREATED       STATUS         PORTS                                       NAMES
+72c77da16758   cf48580e147d   "java -jar app.jar"   3 hours ago   Up 3 seconds   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp   symbolic-expression-engine
