@@ -117,9 +117,9 @@ export default function App() {
                 >
                   Launch Calculator
                 </Button>
-                <Button size="lg" variant="outline" className="cursor-pointer">
+                <a href="https://github.com/ismiljanic/symbolic-expression-engine/tree/main/docs" target="_blank" rel="noopener noreferrer" className="bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center cursor-pointer">
                   View Documentation
-                </Button>
+                </a>
               </motion.div>
 
               {/* Visual Matrix Display */}
@@ -201,7 +201,7 @@ export default function App() {
                 />
                 <FeatureCard
                   icon={Network}
-                  title="Tridiagonal Matrices (coming soon)"
+                  title="Tridiagonal Matrices"
                   description="Specialized support for tridiagonal and band matrices commonly found in scientific computing."
                   delay={0.4}
                 />
@@ -238,9 +238,9 @@ export default function App() {
                 >
                   Try Live Demo
                 </Button>
-                <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-50 cursor-pointer">
+                {/* <Button size="lg" variant="outline" className="bg-white text-blue-600 hover:bg-gray-50 cursor-pointer">
                   Read the Paper
-                </Button>
+                </Button> */}
               </div>
             </motion.div>
           </section>
@@ -254,8 +254,7 @@ export default function App() {
                   <span>SymbolicDet CAS</span>
                 </div>
                 <div className="flex gap-6">
-                  <a href="https://github.com/ismiljanic/symbolic-expression-engine/docs" className="hover:text-gray-900 transition-colors">Documentation</a>
-                  <a href="#" className="hover:text-gray-900 transition-colors">API Reference</a>
+                  <a href="https://github.com/ismiljanic/symbolic-expression-engine/tree/main/docs" className="hover:text-gray-900 transition-colors">Documentation</a>
                   <a href="https://github.com/ismiljanic/symbolic-expression-engine" className="hover:text-gray-900 transition-colors">GitHub</a>
                 </div>
                 <div>© 2026 All rights reserved</div>
